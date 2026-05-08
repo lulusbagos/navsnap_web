@@ -1,0 +1,1095 @@
+@model NavSnap.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    .dash-shell {
+        --dash-indigo: #1f4ed8;
+        --dash-cyan: #0ea5e9;
+        --dash-emerald: #0ea879;
+        --dash-amber: #c6922a;
+        --dash-rose: #cf5c74;
+        --dash-ink: #0f2034;
+        --dash-soft-bg: #ecf4ff;
+        --dash-gold: #d4a84f;
+        margin-bottom: 1.5rem;
+    }
+    .dash-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.15rem 1.2rem;
+        border: 1px solid rgba(31, 78, 216, .2);
+        border-radius: 12px;
+        background:
+            radial-gradient(circle at 78% 10%, rgba(12,198,255,.24), transparent 26rem),
+            radial-gradient(circle at 20% 100%, rgba(63,94,251,.18), transparent 23rem),
+            linear-gradient(120deg, rgba(255,255,255,.98), rgba(239,246,255,.98));
+        box-shadow: 0 20px 36px rgba(23, 35, 49, .13);
+    }
+    .dash-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1c2f42;
+        line-height: 1.25;
+    }
+    .dash-sub {
+        margin: .2rem 0 0;
+        color: #6b7d8f;
+        font-size: .82rem;
+    }
+    .dash-date-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid rgba(15, 107, 143, .24);
+        border-radius: 8px;
+        padding: .55rem .72rem;
+        background: rgba(15, 107, 143, .08);
+        color: #0c4f69;
+        font-size: .78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .kpi-card {
+        border: 1px solid #d9e6ef !important;
+        border-radius: 12px !important;
+        box-shadow: 0 14px 28px rgba(23, 35, 49, .1) !important;
+        overflow: hidden;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 20px 34px rgba(23,35,49,.14) !important; }
+    .kpi-card .card-body { padding: .95rem 1rem; }
+    .kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .6rem;
+    }
+    .kpi-label {
+        font-size: .68rem;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        font-weight: 800;
+        color: #5f7589;
+        margin: 0;
+    }
+    .kpi-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        color: #fff;
+    }
+    .kpi-value {
+        margin: 0;
+        color: #13283a;
+        font-size: 1.48rem;
+        font-weight: 800;
+        line-height: 1.05;
+    }
+    .kpi-note {
+        margin-top: .3rem;
+        color: #6c8193;
+        font-size: .77rem;
+        font-weight: 600;
+    }
+    .kpi-blue .kpi-icon { background: linear-gradient(135deg, #1f53ff, #0cc6ff); }
+    .kpi-cyan .kpi-icon { background: linear-gradient(135deg, #0090d3, #2ad8f8); }
+    .kpi-green .kpi-icon { background: linear-gradient(135deg, #03a66f, #20d394); }
+    .kpi-amber .kpi-icon { background: linear-gradient(135deg, #db8f00, #ffc436); }
+    .kpi-purple .kpi-icon { background: linear-gradient(135deg, #5742ff, #7f8dff); }
+    .kpi-navy .kpi-icon { background: linear-gradient(135deg, #203a63, #3f5efb); }
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .95rem;
+        margin-bottom: 1rem;
+    }
+
+    .panel-card {
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+    .panel-head {
+        padding: .85rem 1rem !important;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(135deg, #0f5877, #0f6b8f) !important;
+        color: #fff !important;
+    }
+    .panel-head h6 {
+        margin: 0;
+        font-weight: 800;
+        font-size: .83rem;
+        letter-spacing: .01em;
+    }
+    .panel-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        border-radius: 999px;
+        padding: .28rem .62rem;
+        background: rgba(255,255,255,.16);
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    #dashMap { height: 360px; }
+    .mini-empty {
+        text-align: center;
+        color: #788b9d;
+        padding: 1.15rem;
+        font-size: .82rem;
+    }
+    .visit-table td, .visit-table th { vertical-align: middle; }
+    .visit-table td { font-size: .82rem; }
+    .visit-name {
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .visit-cp {
+        max-width: 160px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .15rem .55rem;
+        font-size: .68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .status-arrived { background: rgba(24,167,122,.13); color: #10684c; }
+    .status-completed { background: rgba(43,187,216,.15); color: #0d6b82; }
+    .status-skipped { background: rgba(217,76,76,.14); color: #9a3030; }
+    .status-pending { background: rgba(214,155,23,.14); color: #865f0b; }
+    .sales-ana-card {
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+    .sales-row { display: flex; align-items: center; gap: .75rem; }
+    .sales-photo {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(15,107,143,.24);
+        flex-shrink: 0;
+    }
+    .sales-photo-fallback {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .82rem;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, #0f6b8f, #2bbbd8);
+        flex-shrink: 0;
+    }
+    .sales-name {
+        margin: 0;
+        color: #183044;
+        font-size: .83rem;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+    .sales-job {
+        margin: .18rem 0 0;
+        color: #6c8296;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .star-wrap { color: #e4a11b; font-size: .78rem; letter-spacing: .04em; }
+    .star-muted { color: #d2dbe2; }
+    .achv-text {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .18rem .55rem;
+        font-size: .68rem;
+        font-weight: 800;
+        background: rgba(15,107,143,.1);
+        color: #0c5f7f;
+    }
+    .dummy-grid { display: grid; gap: 1rem; grid-template-columns: 1.1fr .9fr; }
+    .dummy-card {
+        border: 1px solid #dbe6ef;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 16px 30px rgba(22, 37, 52, .11);
+        overflow: hidden;
+    }
+    .dummy-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .7rem;
+        padding: .85rem 1rem;
+        background: linear-gradient(135deg, #1b3059, #1f4ed8);
+        color: #fff;
+    }
+    .dummy-head h6 { margin: 0; font-size: .83rem; font-weight: 800; }
+    .dummy-body { padding: .95rem 1rem; }
+    .seg-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: .9rem; }
+    .seg {
+        border-radius: 8px;
+        padding: .75rem .7rem;
+        color: #fff;
+        min-height: 84px;
+    }
+    .seg h4 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+    .seg p { margin: .2rem 0 0; font-size: .72rem; opacity: .95; }
+    .seg.good { background: linear-gradient(135deg, #07a96f, #21d596); }
+    .seg.mid { background: linear-gradient(135deg, #d08907, #f5b52f); }
+    .seg.low { background: linear-gradient(135deg, #d34747, #f06e6e); }
+    .leader-row {
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) 76px 56px;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .55rem;
+    }
+    .leader-name { font-size: .8rem; font-weight: 700; color: #1f3548; }
+    .leader-bar {
+        height: 7px;
+        background: #e8eef4;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    .leader-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2b8db2, #30bfd6);
+    }
+    .leader-val { font-size: .73rem; font-weight: 800; color: #345267; text-align: right; }
+    .dummy-sales-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .7rem;
+        margin-top: .75rem;
+    }
+    .dummy-sales-card {
+        border: 1px solid #d8e4ef;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ffffff, #f7fbff);
+        padding: .65rem;
+    }
+    .dummy-sales-top {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        margin-bottom: .55rem;
+    }
+    .dummy-sales-photo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(31, 78, 216, .22);
+    }
+    .dummy-sales-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .76rem;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, #1f4ed8, #0ea5e9);
+    }
+    .dummy-sales-name {
+        margin: 0;
+        color: #173047;
+        font-size: .78rem;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+    .dummy-sales-role {
+        margin: .14rem 0 0;
+        color: #688095;
+        font-size: .68rem;
+        font-weight: 700;
+    }
+    .dummy-kpi-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .24rem;
+        color: #244359;
+        font-size: .7rem;
+        font-weight: 700;
+    }
+    .dummy-kpi-line strong {
+        font-size: .74rem;
+        color: #16344d;
+    }
+    .dummy-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: #e4edf6;
+        overflow: hidden;
+        margin-bottom: .35rem;
+    }
+    .dummy-progress > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #1f4ed8, #0ea5e9);
+    }
+    .dummy-stars {
+        color: #d4a84f;
+        font-size: .71rem;
+        letter-spacing: .03em;
+    }
+    .dummy-stars .off { color: #d5dee7; }
+    .risk-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .7rem;
+        padding: .55rem 0;
+        border-bottom: 1px dashed #dde8f0;
+    }
+    .risk-item:last-child { border-bottom: 0; padding-bottom: 0; }
+    .risk-name { margin: 0; font-size: .79rem; color: #22384a; font-weight: 700; }
+    .risk-sub { margin: .1rem 0 0; font-size: .72rem; color: #73889b; }
+    .pill-soft {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: .14rem .48rem;
+        font-size: .66rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .pill-red { background: rgba(216,95,95,.14); color: #a53f3f; }
+    .pill-amber { background: rgba(221,160,45,.14); color: #9a6a10; }
+    .pill-green { background: rgba(36,181,136,.15); color: #0f7859; }
+    .insight-list { margin: 0; padding-left: 1rem; color: #5f7487; font-size: .78rem; }
+    .insight-list li { margin-bottom: .4rem; }
+    .graph-grid {
+        display: grid;
+        grid-template-columns: 1.35fr .85fr;
+        gap: 1rem;
+    }
+    .graph-card {
+        border: 1px solid #dbe6ef;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 16px 30px rgba(22, 37, 52, .1);
+        overflow: hidden;
+    }
+    .graph-head {
+        padding: .82rem .95rem;
+        background: linear-gradient(135deg, #1a315a, #1f4ed8);
+        color: #fff;
+        font-size: .82rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .graph-body { padding: .9rem; }
+    .mini-kpi-wrap {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .6rem;
+        margin-top: .8rem;
+    }
+    .mini-kpi {
+        border: 1px solid #d8e5f0;
+        border-radius: 9px;
+        background: #f7fbff;
+        padding: .55rem .6rem;
+    }
+    .mini-kpi .v {
+        color: #12314b;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0;
+    }
+    .mini-kpi .l {
+        margin-top: .2rem;
+        color: #60788e;
+        font-size: .68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .funnel-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .funnel-list li {
+        margin-bottom: .62rem;
+    }
+    .funnel-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: .22rem;
+        color: #1b3348;
+        font-size: .76rem;
+        font-weight: 700;
+    }
+    .funnel-bar {
+        height: 9px;
+        border-radius: 999px;
+        background: #e5eff7;
+        overflow: hidden;
+    }
+    .funnel-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+    }
+    @@media (max-width: 1199.98px) {
+        .kpi-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    @@media (max-width: 991.98px) {
+        .dummy-grid { grid-template-columns: 1fr; }
+        .seg-wrap { grid-template-columns: 1fr; }
+        .dummy-sales-grid { grid-template-columns: 1fr; }
+        .graph-grid { grid-template-columns: 1fr; }
+        .mini-kpi-wrap { grid-template-columns: 1fr; }
+        .kpi-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        #dashMap { height: 300px; }
+    }
+
+    @@media (max-width: 991.98px) {
+        .dash-hero {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .panel-head h6 {
+            font-size: .78rem;
+        }
+        .panel-meta {
+            font-size: .66rem;
+            padding: .24rem .48rem;
+        }
+        .visit-name,
+        .visit-cp {
+            max-width: 110px;
+        }
+        .sales-name {
+            font-size: .78rem;
+        }
+        .sales-job {
+            font-size: .68rem;
+        }
+    }
+    @@media (min-width: 1600px) {
+        .dash-shell {
+            max-width: 1700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #dashMap { height: 410px; }
+    }
+    @@media (max-width: 576px) {
+        .dash-shell { margin-bottom: 1rem; }
+        .dash-hero {
+            padding: .95rem .9rem;
+            border-radius: 10px;
+        }
+        .dash-title {
+            font-size: .95rem;
+        }
+        .dash-sub {
+            font-size: .74rem;
+        }
+        .dash-date-chip {
+            width: 100%;
+            justify-content: center;
+            font-size: .7rem;
+        }
+        .kpi-card .card-body {
+            padding: .85rem .85rem;
+        }
+        .kpi-value {
+            font-size: 1.26rem;
+        }
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+        .dummy-body,
+        .prem-card-body {
+            padding: .85rem .85rem;
+        }
+    }
+</style>
+}
+
+<div class="dash-shell">
+    <div class="dash-hero mb-4">
+        <div>
+            <p class="dash-title"><i class="fas fa-chart-line mr-2 text-primary"></i>Ringkasan Operasional Sales</p>
+            <p class="dash-sub">Pantau progres kunjungan, checkpoint aktif, dan posisi sales real-time dari satu halaman.</p>
+        </div>
+        <div class="dash-date-chip">
+            <i class="fas fa-calendar-alt"></i>
+            @DateTime.Today.ToString("dddd, dd MMMM yyyy")
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-blue h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">User Aktif</p>
+                        <span class="kpi-icon"><i class="fas fa-users"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.TotalUsers</p>
+                    <div class="kpi-note">Akun dengan status aktif</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-cyan h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Checkpoint</p>
+                        <span class="kpi-icon"><i class="fas fa-map-pin"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.TotalCheckpoints</p>
+                    <div class="kpi-note">Lokasi kunjungan aktif</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-purple h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Kunjungan Hari Ini</p>
+                        <span class="kpi-icon"><i class="fas fa-route"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.TodayVisits</p>
+                    <div class="kpi-note">Total visit terjadwal</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-green h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Sudah Tiba</p>
+                        <span class="kpi-icon"><i class="fas fa-check-circle"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.TodayArrived</p>
+                    <div class="kpi-note">Visit dengan status tiba</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-amber h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Pending</p>
+                        <span class="kpi-icon"><i class="fas fa-clock"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.TodayPending</p>
+                    <div class="kpi-note">Visit belum dieksekusi</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-navy h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Sales Aktif (30m)</p>
+                        <span class="kpi-icon"><i class="fas fa-user-check"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.SalesActiveToday/@Model.SalesTotal</p>
+                    <div class="kpi-note">Sales online vs total sales</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card kpi-purple h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Rata Capaian</p>
+                        <span class="kpi-icon"><i class="fas fa-bullseye"></i></span>
+                    </div>
+                    <p class="kpi-value">@Model.AvgAchievementPercent.ToString("0.#")%</p>
+                    <div class="kpi-note">Progress terhadap target harian</div>
+                </div>
+            </div>
+        </div>
+        <div class="kpi-item">
+            <div class="card kpi-card h-100">
+                <div class="card-body">
+                    <div class="kpi-top">
+                        <p class="kpi-label">Skor Kualitas</p>
+                        <span class="kpi-icon" style="background:linear-gradient(135deg,#b98a2a,#e1be70);"><i class="fas fa-crown"></i></span>
+                    </div>
+                    <p class="kpi-value">A+</p>
+                    <div class="kpi-note">Premium sales execution score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow panel-card h-100">
+                <div class="card-header panel-head d-flex align-items-center justify-content-between">
+                    <h6><i class="fas fa-satellite-dish mr-2"></i>Live Sales - Posisi 30 Menit Terakhir</h6>
+                    <span class="panel-meta"><i class="fas fa-broadcast-tower"></i><span id="onlineCount">@Model.SalesOnline.Count online</span></span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="dashMap"></div>
+                    <div id="mapEmpty" class="mini-empty d-none">Belum ada data GPS sales dalam 30 menit terakhir.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow panel-card h-100">
+                <div class="card-header panel-head">
+                    <h6><i class="fas fa-history mr-2"></i>Aktivitas Kunjungan Hari Ini</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 visit-table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Sales</th>
+                                    <th>Checkpoint</th>
+                                    <th>Status</th>
+                                    <th>Waktu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.RecentVisits.Any())
+                                {
+                                    <tr><td colspan="4" class="text-center text-muted py-4">Belum ada kunjungan hari ini</td></tr>
+                                }
+                                @foreach (var v in Model.RecentVisits)
+                                {
+                                    var statusClass = v.Status switch
+                                    {
+                                        "arrived" => "status-arrived",
+                                        "completed" => "status-completed",
+                                        "skipped" => "status-skipped",
+                                        _ => "status-pending"
+                                    };
+                                    var statusText = v.Status switch
+                                    {
+                                        "arrived" => "Tiba",
+                                        "completed" => "Selesai",
+                                        "skipped" => "Dilewati",
+                                        _ => "Pending"
+                                    };
+
+                                    <tr>
+                                        <td class="visit-name" title="@v.SalesName">@v.SalesName</td>
+                                        <td class="visit-cp" title="@v.CheckpointName">@v.CheckpointName</td>
+                                        <td><span class="status-pill @statusClass">@statusText</span></td>
+                                        <td class="small text-muted">@(v.ArrivedAt.HasValue ? v.ArrivedAt.Value.ToLocalTime().ToString("HH:mm") : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow sales-ana-card">
+                <div class="card-header panel-head d-flex align-items-center justify-content-between">
+                    <h6><i class="fas fa-user-tie mr-2"></i>Analitik Sales Harian</h6>
+                    <span class="panel-meta"><i class="fas fa-clipboard-check"></i>Target Kunjungan</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Sales</th>
+                                    <th>Aktif</th>
+                                    <th>Target</th>
+                                    <th>Realisasi</th>
+                                    <th>Capaian</th>
+                                    <th>Rating</th>
+                                    <th>Terakhir Online</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.SalesPerformances.Any())
+                                {
+                                    <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data sales.</td></tr>
+                                }
+                                @foreach (var s in Model.SalesPerformances)
+                                {
+                                    var initials = string.Join("", s.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0])).ToUpper();
+                                    <tr>
+                                        <td>
+                                            <div class="sales-row">
+                                                @if (!string.IsNullOrWhiteSpace(s.PhotoPath))
+                                                {
+                                                    <img src="@s.PhotoPath" alt="@s.FullName" class="sales-photo" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="sales-photo-fallback">@initials</span>
+                                                }
+                                                <div>
+                                                    <p class="sales-name">@s.FullName</p>
+                                                    <p class="sales-job">@s.JobTitle</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (s.IsActiveToday)
+                                            {
+                                                <span class="badge badge-success">Aktif</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">Offline</span>
+                                            }
+                                        </td>
+                                        <td><strong>@s.DailyTarget</strong></td>
+                                        <td><strong>@s.CompletedVisits</strong></td>
+                                        <td><span class="achv-text">@s.AchievementPercent.ToString("0.#")%</span></td>
+                                        <td>
+                                            <span class="star-wrap">
+                                                @for (var i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= s.StarRating)
+                                                    {
+                                                        <i class="fas fa-star"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-star star-muted"></i>
+                                                    }
+                                                }
+                                            </span>
+                                        </td>
+                                        <td class="small text-muted">@(s.LastSeen.HasValue ? s.LastSeen.Value.ToLocalTime().ToString("HH:mm") : "-")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dummy-grid mb-4">
+        <div class="dummy-card">
+            <div class="dummy-head">
+                <h6><i class="fas fa-vial mr-2"></i>Dummy - Simulasi Pencapaian Harian</h6>
+                <span class="panel-meta"><i class="fas fa-lightbulb"></i>Preview UI</span>
+            </div>
+            <div class="dummy-body">
+                <div class="seg-wrap">
+                    <div class="seg good">
+                        <h4>16</h4>
+                        <p>Karyawan Baik<br />Capaian 90-100%</p>
+                    </div>
+                    <div class="seg mid">
+                        <h4>9</h4>
+                        <p>Karyawan Cukup<br />Capaian 70-89%</p>
+                    </div>
+                    <div class="seg low">
+                        <h4>5</h4>
+                        <p>Karyawan Kurang<br />Capaian &lt;70%</p>
+                    </div>
+                </div>
+                <div class="dummy-sales-grid">
+                    <div class="dummy-sales-card">
+                        <div class="dummy-sales-top">
+                            <span class="dummy-sales-avatar">DA</span>
+                            <div>
+                                <p class="dummy-sales-name">Dina Aulia</p>
+                                <p class="dummy-sales-role">Sales Executive</p>
+                            </div>
+                        </div>
+                        <div class="dummy-kpi-line"><span>Target</span><strong>12 toko</strong></div>
+                        <div class="dummy-kpi-line"><span>Pencapaian</span><strong>12 toko (100%)</strong></div>
+                        <div class="dummy-progress"><span style="width:100%"></span></div>
+                        <div class="dummy-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                    </div>
+                    <div class="dummy-sales-card">
+                        <div class="dummy-sales-top">
+                            <span class="dummy-sales-avatar">RP</span>
+                            <div>
+                                <p class="dummy-sales-name">Rizky Pratama</p>
+                                <p class="dummy-sales-role">Area Sales</p>
+                            </div>
+                        </div>
+                        <div class="dummy-kpi-line"><span>Target</span><strong>13 toko</strong></div>
+                        <div class="dummy-kpi-line"><span>Pencapaian</span><strong>12 toko (92%)</strong></div>
+                        <div class="dummy-progress"><span style="width:92%"></span></div>
+                        <div class="dummy-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star off"></i></div>
+                    </div>
+                    <div class="dummy-sales-card">
+                        <div class="dummy-sales-top">
+                            <span class="dummy-sales-avatar">NP</span>
+                            <div>
+                                <p class="dummy-sales-name">Nabila Putri</p>
+                                <p class="dummy-sales-role">Merchandiser</p>
+                            </div>
+                        </div>
+                        <div class="dummy-kpi-line"><span>Target</span><strong>19 toko</strong></div>
+                        <div class="dummy-kpi-line"><span>Pencapaian</span><strong>16 toko (84%)</strong></div>
+                        <div class="dummy-progress"><span style="width:84%"></span></div>
+                        <div class="dummy-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star off"></i><i class="fas fa-star off"></i></div>
+                    </div>
+                    <div class="dummy-sales-card">
+                        <div class="dummy-sales-top">
+                            <span class="dummy-sales-avatar">FA</span>
+                            <div>
+                                <p class="dummy-sales-name">Fahmi Akbar</p>
+                                <p class="dummy-sales-role">Sales Representative</p>
+                            </div>
+                        </div>
+                        <div class="dummy-kpi-line"><span>Target</span><strong>22 toko</strong></div>
+                        <div class="dummy-kpi-line"><span>Pencapaian</span><strong>15 toko (68%)</strong></div>
+                        <div class="dummy-progress"><span style="width:68%"></span></div>
+                        <div class="dummy-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star off"></i><i class="fas fa-star off"></i><i class="fas fa-star off"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dummy-card">
+            <div class="dummy-head">
+                <h6><i class="fas fa-shield-alt mr-2"></i>Dummy - Risiko & Insight</h6>
+                <span class="panel-meta"><i class="fas fa-chart-pie"></i>Analitik Lainnya</span>
+            </div>
+            <div class="dummy-body">
+                <div class="risk-item">
+                    <div>
+                        <p class="risk-name">KPI Coverage Wilayah Timur</p>
+                        <p class="risk-sub">2 sales melewati 3 toko wajib hari ini.</p>
+                    </div>
+                    <span class="pill-soft pill-red">High Risk</span>
+                </div>
+                <div class="risk-item">
+                    <div>
+                        <p class="risk-name">Kunjungan Tepat Waktu</p>
+                        <p class="risk-sub">Rata-rata keterlambatan 18 menit vs SLA 10 menit.</p>
+                    </div>
+                    <span class="pill-soft pill-amber">Watch</span>
+                </div>
+                <div class="risk-item">
+                    <div>
+                        <p class="risk-name">Produktivitas Checkpoint Aktif</p>
+                        <p class="risk-sub">12 checkpoint menunjukkan performa konsisten.</p>
+                    </div>
+                    <span class="pill-soft pill-green">Healthy</span>
+                </div>
+
+                <hr />
+                <ul class="insight-list">
+                    <li>Performa terbaik terjadi pada slot 09:00-11:00 (dummy insight).</li>
+                    <li>Sales dengan rating bintang ≤ 2 perlu coaching mingguan.</li>
+                    <li>KPI harian bisa dipisah per divisi/jabatan untuk evaluasi HR.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="graph-grid mb-4">
+        <div class="graph-card">
+            <div class="graph-head">
+                <span><i class="fas fa-chart-line mr-2"></i>Dummy - Trend Performa 7 Hari</span>
+                <span class="panel-meta"><i class="fas fa-chart-area"></i>Sales Velocity</span>
+            </div>
+            <div class="graph-body">
+                <div style="height:220px;position:relative;">
+                    <canvas id="dummyTrendChart"></canvas>
+                </div>
+                <div class="mini-kpi-wrap">
+                    <div class="mini-kpi">
+                        <p class="v">91%</p>
+                        <div class="l">Avg Compliance</div>
+                    </div>
+                    <div class="mini-kpi">
+                        <p class="v">+14%</p>
+                        <div class="l">Growth WoW</div>
+                    </div>
+                    <div class="mini-kpi">
+                        <p class="v">3.8</p>
+                        <div class="l">Avg Star</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-card">
+            <div class="graph-head">
+                <span><i class="fas fa-filter mr-2"></i>Dummy - Funnel Eksekusi</span>
+                <span class="panel-meta"><i class="fas fa-signal"></i>Daily Conversion</span>
+            </div>
+            <div class="graph-body">
+                <ul class="funnel-list">
+                    <li>
+                        <div class="funnel-top"><span>Toko Wajib Hari Ini</span><span>86</span></div>
+                        <div class="funnel-bar"><span style="width:100%;background:linear-gradient(90deg,#3f5efb,#0cc6ff)"></span></div>
+                    </li>
+                    <li>
+                        <div class="funnel-top"><span>Berhasil Dikunjungi</span><span>74</span></div>
+                        <div class="funnel-bar"><span style="width:86%;background:linear-gradient(90deg,#08b87a,#28d7a0)"></span></div>
+                    </li>
+                    <li>
+                        <div class="funnel-top"><span>Tepat Waktu</span><span>63</span></div>
+                        <div class="funnel-bar"><span style="width:73%;background:linear-gradient(90deg,#f4ad21,#ffd15e)"></span></div>
+                    </li>
+                    <li>
+                        <div class="funnel-top"><span>Perlu Follow-up</span><span>11</span></div>
+                        <div class="funnel-bar"><span style="width:13%;background:linear-gradient(90deg,#ef4f79,#ff8099)"></span></div>
+                    </li>
+                </ul>
+                <hr />
+                <div style="height:220px;position:relative;">
+                    <canvas id="dummyMixChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    var salesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SalesOnline.Select(s => new {
+        s.FullName, s.LastLatitude, s.LastLongitude,
+        lastSeen = s.LastSeen?.ToString("HH:mm") ?? "-"
+    })));
+
+    var map = L.map('dashMap', { zoomControl: true }).setView([-2.5, 117.5], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(map);
+
+    var salesIcon = L.divIcon({
+        html: '<div style="background:linear-gradient(135deg,#0f6b8f,#2bbbd8);color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 5px 14px rgba(15,107,143,0.45);border:2px solid rgba(255,255,255,0.95);"><i class="fas fa-user"></i></div>',
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+    });
+
+    var hasMarker = false;
+    salesData.forEach(function (s) {
+        if (s.LastLatitude && s.LastLongitude) {
+            hasMarker = true;
+            L.marker([s.LastLatitude, s.LastLongitude], { icon: salesIcon })
+                .addTo(map)
+                .bindPopup('<strong>' + s.FullName + '</strong><br>Terakhir: ' + s.lastSeen);
+        }
+    });
+
+    if (hasMarker) {
+        var first = salesData.find(function (s) { return s.LastLatitude && s.LastLongitude; });
+        if (first) map.setView([first.LastLatitude, first.LastLongitude], 11);
+    } else {
+        document.getElementById('dashMap').classList.add('d-none');
+        document.getElementById('mapEmpty').classList.remove('d-none');
+    }
+
+    var trendCtx = document.getElementById('dummyTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                datasets: [{
+                    label: 'Kepatuhan Target (%)',
+                    data: [72, 76, 80, 85, 91, 88, 94],
+                    borderColor: '#3f5efb',
+                    backgroundColor: 'rgba(63,94,251,.15)',
+                    fill: true,
+                    tension: .36,
+                    borderWidth: 2.6,
+                    pointRadius: 3.2,
+                    pointBackgroundColor: '#0cc6ff'
+                }, {
+                    label: 'Kunjungan Selesai',
+                    data: [38, 44, 49, 56, 63, 59, 68],
+                    borderColor: '#08b87a',
+                    backgroundColor: 'rgba(8,184,122,.08)',
+                    tension: .35,
+                    borderWidth: 2.3,
+                    pointRadius: 2.8
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'nearest' },
+                plugins: {
+                    legend: { labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' }, grid: { color: 'rgba(18,49,75,.08)' } }
+                }
+            }
+        });
+    }
+
+    var mixCtx = document.getElementById('dummyMixChart');
+    if (mixCtx) {
+        new Chart(mixCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['On Target', 'Late Visit', 'Not Visited', 'Reschedule'],
+                datasets: [{
+                    data: [58, 20, 13, 9],
+                    backgroundColor: ['#08b87a', '#f4ad21', '#ef4f79', '#3f5efb'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'circle' } }
+                }
+            }
+        });
+    }
+</script>
+}

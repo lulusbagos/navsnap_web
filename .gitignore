@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+
+# Local config / secret override
+NavSnap/appsettings.Development.json
+NavSnap/appsettings.Local.json
+
+# Publish output
+publish/

@@ -1,0 +1,271 @@
+@using System.Security.Claims
+@{
+    var userFullName = User.FindFirstValue("FullName") ?? User.Identity?.Name ?? "User";
+    var userName = User.Identity?.Name ?? "";
+    var isAdmin = User.IsInRole("Administrator");
+
+    // Build allowed menu URLs for this user
+    // (Sidebar partial handles this via helper)
+}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>@ViewData["Title"] - NavSnap HRIS</title>
+
+    <!-- SB Admin 2 via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/vendor/fontawesome-free/css/all.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/css/sb-admin-2.min.css" />
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        :root {
+            --primary-blue: #1a5fa8;
+            --dark-blue:    #0d3c6e;
+            --accent-blue:  #2196f3;
+        }
+        .sidebar { background: linear-gradient(180deg, var(--dark-blue) 0%, var(--primary-blue) 100%) !important; }
+        .sidebar .nav-item .nav-link { color: rgba(255,255,255,0.85) !important; }
+        .sidebar .nav-item .nav-link:hover,
+        .sidebar .nav-item.active .nav-link { color: #fff !important; background: rgba(255,255,255,0.15) !important; border-radius: 6px; }
+        .sidebar-brand { background: var(--dark-blue) !important; }
+        .sidebar-brand-text { font-weight: 800; letter-spacing: 1px; }
+        .sidebar .nav-item .collapse .collapse-inner .collapse-item.active,
+        .sidebar .nav-item .collapse .collapse-inner .collapse-item:hover { background: rgba(255,255,255,0.12) !important; color: #fff !important; }
+        .sidebar .nav-item .collapse .collapse-inner .collapse-item { color: rgba(255,255,255,0.75) !important; }
+        .topbar { box-shadow: 0 2px 8px rgba(26,95,168,0.12); }
+        .btn-primary { background: var(--primary-blue); border-color: var(--primary-blue); }
+        .btn-primary:hover { background: var(--dark-blue); border-color: var(--dark-blue); }
+        .card { border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-radius: 10px; }
+        .card-header { border-radius: 10px 10px 0 0 !important; }
+        .badge-status-pending  { background: #f6c23e; color: #333; }
+        .badge-status-arrived  { background: #1cc88a; color: #fff; }
+        .badge-status-completed{ background: #36b9cc; color: #fff; }
+        .badge-status-skipped  { background: #e74a3b; color: #fff; }
+        .border-left-primary   { border-left: 4px solid var(--primary-blue) !important; }
+        .border-left-success   { border-left: 4px solid #1cc88a !important; }
+        .border-left-warning   { border-left: 4px solid #f6c23e !important; }
+        .border-left-info      { border-left: 4px solid #36b9cc !important; }
+        #map { border-radius: 10px; }
+        /* allow full-viewport tracking page */
+        body.page-tracking #content { padding: 0 !important; }
+        body.page-tracking #content-wrapper { overflow: hidden; }
+        body.page-tracking .container-fluid { padding: 0 !important; }
+
+        /* ══════════════════════════════════════════════════════
+           PREMIUM FORM SYSTEM — shared across all form pages
+           ══════════════════════════════════════════════════════ */
+
+        /* page background override */
+        body.pf-page #content-wrapper { background: linear-gradient(135deg,#07111f 0%,#0d1a2e 100%) !important; }
+
+        /* ── Page header ─────────────────────────────────────── */
+        .pf-page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+        .pf-page-header-left { display:flex; align-items:center; gap:14px; }
+        .pf-page-ico { width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg,#1565c0,#2196f3); display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; box-shadow:0 4px 20px rgba(33,150,243,.4); flex-shrink:0; }
+        .pf-page-title { font-size:1.2rem; font-weight:800; color:#e3f2fd; margin:0; line-height:1.2; }
+        .pf-page-sub { font-size:.73rem; color:rgba(255,255,255,.3); margin:3px 0 0; }
+        .pf-back { background:rgba(255,255,255,.04); border:1px solid rgba(33,150,243,.2); border-radius:9px; color:rgba(255,255,255,.55); padding:8px 18px; font-size:.82rem; text-decoration:none; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+        .pf-back:hover { background:rgba(33,150,243,.1); border-color:rgba(33,150,243,.4); color:#e3f2fd; text-decoration:none; }
+
+        /* ── Card ────────────────────────────────────────────── */
+        .prem-card { background:rgba(13,30,53,.97) !important; border:1px solid rgba(33,150,243,.18) !important; border-radius:16px !important; box-shadow:0 20px 60px rgba(0,0,0,.45) !important; overflow:hidden; }
+        .prem-card-head { background:linear-gradient(135deg,rgba(21,101,192,.2),rgba(33,150,243,.07)); border-bottom:1px solid rgba(33,150,243,.15); padding:16px 22px; display:flex; align-items:center; gap:10px; }
+        .prem-card-head-ico { width:32px; height:32px; border-radius:8px; background:rgba(33,150,243,.12); border:1px solid rgba(33,150,243,.2); display:flex; align-items:center; justify-content:center; color:#42a5f5; font-size:13px; flex-shrink:0; }
+        .prem-card-head h6 { margin:0; font-size:.85rem; font-weight:800; color:#e3f2fd; letter-spacing:.3px; }
+        .prem-card-body { padding:24px 24px 20px; }
+
+        /* ── Form field wrapper ──────────────────────────────── */
+        .pf { margin-bottom:16px; }
+        .pf > label, .pf-lbl { display:block; font-size:.67rem; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:rgba(33,150,243,.65); margin-bottom:6px; }
+        .pf input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+        .pf textarea,
+        .pf select { display:block; width:100%; background:rgba(7,17,31,.78) !important; border:1px solid rgba(33,150,243,.18) !important; border-radius:10px !important; color:#e3f2fd !important; padding:10px 14px !important; font-size:.88rem !important; transition:border-color .2s,box-shadow .2s,background .2s !important; box-shadow:none !important; outline:none !important; line-height:1.5; }
+        .pf input:not([type=checkbox]):not([type=radio]):not([type=hidden]):focus,
+        .pf textarea:focus,
+        .pf select:focus { border-color:rgba(33,150,243,.55) !important; box-shadow:0 0 0 3px rgba(33,150,243,.1) !important; background:rgba(5,12,25,.9) !important; }
+        .pf input::placeholder, .pf textarea::placeholder { color:rgba(255,255,255,.17) !important; }
+        .pf input[readonly],.pf input:disabled { opacity:.5; cursor:not-allowed !important; }
+        .pf select option { background:#0d1e35; color:#e3f2fd; }
+        .pf .val-err { font-size:.7rem; color:#ef5350; margin-top:4px; display:block; }
+        .pf .f-hint { font-size:.7rem; color:rgba(255,255,255,.28); margin-top:4px; display:block; }
+
+        /* input-group (append) */
+        .pf-grp { display:flex; }
+        .pf-grp input { border-radius:10px 0 0 10px !important; flex:1; }
+        .pf-grp .pf-app { background:rgba(33,150,243,.07); border:1px solid rgba(33,150,243,.18); border-left:none; border-radius:0 10px 10px 0; padding:10px 14px; color:rgba(33,150,243,.65); font-size:.8rem; font-weight:700; white-space:nowrap; display:flex; align-items:center; }
+
+        /* section divider */
+        .pf-div { height:1px; background:linear-gradient(90deg,rgba(33,150,243,.15),transparent); margin:6px 0 20px; }
+        .pf-sec { font-size:.64rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:rgba(33,150,243,.45); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        .pf-sec::after { content:''; flex:1; height:1px; background:rgba(33,150,243,.1); }
+
+        /* ── Toggle switch ───────────────────────────────────── */
+        .prem-toggle { display:flex; align-items:center; gap:12px; padding:8px 0; }
+        .prem-toggle-input { position:absolute; opacity:0; width:0; height:0; pointer-events:none; }
+        .prem-toggle-track { width:44px; height:24px; border-radius:12px; background:rgba(255,255,255,.07); border:1px solid rgba(33,150,243,.22); position:relative; cursor:pointer; display:block; flex-shrink:0; transition:all .25s; }
+        .prem-toggle-thumb { width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,.28); position:absolute; top:2px; left:2px; transition:transform .25s,background .25s,box-shadow .25s; display:block; }
+        .prem-toggle-input:checked + .prem-toggle-track { background:rgba(33,150,243,.2); border-color:rgba(33,150,243,.6); }
+        .prem-toggle-input:checked + .prem-toggle-track .prem-toggle-thumb { transform:translateX(20px); background:#2196f3; box-shadow:0 0 8px rgba(33,150,243,.7); }
+        .prem-toggle-lbl { font-size:.83rem; color:rgba(255,255,255,.5); font-weight:600; }
+
+        /* ── Premium checkboxes ──────────────────────────────── */
+        .prem-checks { background:rgba(7,17,31,.5); border:1px solid rgba(33,150,243,.14); border-radius:12px; padding:12px 14px; }
+        .prem-check { margin-bottom:4px; }
+        .prem-check:last-child { margin-bottom:0; }
+        .prem-check input[type=checkbox] { position:absolute; opacity:0; width:0; height:0; }
+        .prem-check label { display:flex; align-items:center; gap:10px; cursor:pointer; padding:7px 10px; border-radius:8px; transition:background .15s; color:rgba(255,255,255,.55); font-size:.85rem; }
+        .prem-check label:hover { background:rgba(33,150,243,.07); color:#e3f2fd; }
+        .prem-check-box { width:18px; height:18px; border-radius:5px; flex-shrink:0; border:1.5px solid rgba(33,150,243,.28); background:rgba(7,17,31,.8); transition:all .18s; display:flex; align-items:center; justify-content:center; font-size:11px; color:transparent; }
+        .prem-check input:checked + label { color:#e3f2fd; }
+        .prem-check input:checked + label .prem-check-box { background:rgba(33,150,243,.2); border-color:#2196f3; color:#42a5f5; }
+        .prem-check input:checked + label .prem-check-box::after { content:'✓'; font-weight:900; }
+
+        /* ── Buttons ─────────────────────────────────────────── */
+        .prem-submit { background:linear-gradient(135deg,#1565c0,#2196f3); border:none; border-radius:10px; color:#fff; font-size:.9rem; font-weight:800; letter-spacing:.5px; padding:13px 20px; width:100%; cursor:pointer; box-shadow:0 4px 20px rgba(33,150,243,.3); transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:6px; }
+        .prem-submit:hover { box-shadow:0 6px 30px rgba(33,150,243,.5); transform:translateY(-1px); color:#fff; }
+        .prem-submit:active { transform:translateY(0); }
+        .prem-btn-ghost { background:transparent; border:1px solid rgba(33,150,243,.22); border-radius:8px; color:rgba(255,255,255,.45); font-size:.78rem; font-weight:700; padding:7px 14px; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
+        .prem-btn-ghost:hover { background:rgba(33,150,243,.1); border-color:rgba(33,150,243,.45); color:#e3f2fd; }
+
+        /* role badges */
+        .rbadge { font-size:.67rem; font-weight:700; border-radius:6px; padding:2px 8px; }
+        .rbadge-admin    { background:rgba(239,83,80,.15); color:#ef5350; border:1px solid rgba(239,83,80,.3); }
+        .rbadge-pengawas { background:rgba(246,194,62,.15); color:#f6c23e; border:1px solid rgba(246,194,62,.3); }
+        .rbadge-sales    { background:rgba(33,150,243,.15); color:#42a5f5; border:1px solid rgba(33,150,243,.3); }
+        .rbadge-other    { background:rgba(255,255,255,.06); color:rgba(255,255,255,.4); border:1px solid rgba(255,255,255,.1); }
+    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Home/Index">
+                <div class="sidebar-brand-icon">
+                    <i class="fas fa-map-marker-alt fa-lg"></i>
+                </div>
+                <div class="sidebar-brand-text mx-3">NavSnap</div>
+            </a>
+            <hr class="sidebar-divider my-0" />
+
+            @await Component.InvokeAsync("SidebarMenu")
+
+            <!-- Sidebar Toggler -->
+            <div class="text-center d-none d-md-inline mt-3">
+                <button class="rounded-circle border-0 btn btn-sm" id="sidebarToggle" style="background:rgba(255,255,255,0.2);color:#fff;">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+            </div>
+            <hr class="sidebar-divider d-none d-md-block" />
+
+        </ul>
+        <!-- End Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">@userFullName</span>
+                                <div class="d-inline-block rounded-circle bg-primary text-white text-center"
+                                     style="width:35px;height:35px;line-height:35px;font-size:14px;font-weight:700;">
+                                    @(userFullName.Length > 0 ? userFullName[0].ToString().ToUpper() : "U")
+                                </div>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Profil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Keluar
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- End Topbar -->
+
+                <!-- Main Content -->
+                <div class="container-fluid">
+
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle mr-2"></i>@TempData["Error"]
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                        </div>
+                    }
+
+                    @RenderBody()
+
+                </div>
+                <!-- End Main Content -->
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>NavSnap HRIS &amp; Sales Tracking &copy; @DateTime.Now.Year</span>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+        <!-- End Content Wrapper -->
+
+    </div>
+    <!-- End Page Wrapper -->
+
+    <!-- Scroll to Top -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal (not used with direct form) -->
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/vendor/jquery/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@4.1.4/js/sb-admin-2.min.js"></script>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,75 @@
+@model List<NavSnap.Models.Entities.Menu>
+@{
+    ViewData["Title"] = "Manajemen Menu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-bars mr-2 text-primary"></i>Manajemen Menu
+    </h1>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>Tambah Menu
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-list mr-2"></i>Daftar Menu (@Model.Count)</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Menu</th>
+                        <th>URL</th>
+                        <th>Icon</th>
+                        <th>Parent</th>
+                        <th>Urutan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int no = 1;}
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <td>@no++</td>
+                            <td>
+                                @if (m.ParentId.HasValue)
+                                { <span class="text-muted mr-1">└</span> }
+                                <i class="@(m.IconClass ?? "fas fa-circle") mr-1 text-primary"></i>
+                                <strong>@m.MenuName</strong>
+                            </td>
+                            <td class="small font-monospace text-muted">@(m.MenuUrl ?? "#")</td>
+                            <td class="small"><code>@(m.IconClass ?? "—")</code></td>
+                            <td class="small">@(m.Parent?.MenuName ?? "— (Root)")</td>
+                            <td class="text-center"><span class="badge badge-light border">@m.SortOrder</span></td>
+                            <td class="text-center">
+                                @if (m.IsActive)
+                                { <span class="badge badge-success">Aktif</span> }
+                                else
+                                { <span class="badge badge-secondary">Nonaktif</span> }
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Hapus menu @m.MenuName?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

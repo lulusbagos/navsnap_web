@@ -1,0 +1,78 @@
+@model List<NavSnap.Models.Entities.MUser>
+@{
+    ViewData["Title"] = "User Mobile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-mobile-alt mr-2 text-primary"></i>User Mobile
+    </h1>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-user-plus mr-1"></i>Tambah User Mobile
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-table mr-2"></i>Daftar User Mobile (@Model.Count)</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>NRP</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Terakhir Login</th>
+                        <th>Status</th>
+                        <th>Path Foto Profile</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var no = 1;
+                    }
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>@no++</td>
+                            <td><strong>@u.Nrp</strong></td>
+                            <td>@u.User</td>
+                            <td class="small text-muted">@u.Password</td>
+                            <td class="small">
+                                @(u.TerakhirLogin.HasValue ? u.TerakhirLogin.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                            </td>
+                            <td class="text-center">
+                                @if (u.Status)
+                                {
+                                    <span class="badge badge-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Nonaktif</span>
+                                }
+                            </td>
+                            <td class="small text-muted">@(string.IsNullOrEmpty(u.PathFotoProfile) ? "-" : u.PathFotoProfile)</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@u.Nrp" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@u.Nrp" method="post" class="d-inline"
+                                      onsubmit="return confirm('Hapus user mobile NRP @u.Nrp?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

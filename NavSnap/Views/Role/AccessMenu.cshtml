@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Akses Menu - " + (ViewBag.Role as NavSnap.Models.Entities.Role)?.RoleName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var role = ViewBag.Role as NavSnap.Models.Entities.Role;
+    var allMenus = ViewBag.AllMenus as List<NavSnap.Models.Entities.Menu> ?? new();
+    var assigned = ViewBag.Assigned as HashSet<int> ?? new();
+    var rbadge = role?.RoleName == "Administrator" ? "rbadge-admin"
+               : role?.RoleName == "Pengawas" ? "rbadge-pengawas"
+               : role?.RoleName == "Sales" ? "rbadge-sales" : "rbadge-other";
+    var roleId = role?.Id ?? 0;
+}
+<script>document.body.classList.add('pf-page');</script>
+@if (role == null)
+{
+    <div class="alert alert-danger">Role tidak ditemukan.</div>
+    <a asp-action="Index" class="btn btn-primary btn-sm"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+    return;
+}
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-key"></i></div>
+        <div>
+            <p class="pf-page-title">Pengaturan Akses Menu</p>
+            <p class="pf-page-sub">
+                Role: <span class="rbadge @rbadge" style="font-size:.75rem;">@role?.RoleName</span>
+            </p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="prem-card">
+            <div class="prem-card-head" style="justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div class="prem-card-head-ico"><i class="fas fa-bars"></i></div>
+                    <h6>Pilih Menu yang Dapat Diakses</h6>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="prem-btn-ghost" onclick="checkAll(true)">
+                        <i class="fas fa-check-double"></i>Pilih Semua
+                    </button>
+                    <button type="button" class="prem-btn-ghost" onclick="checkAll(false)">
+                        <i class="fas fa-times"></i>Hapus Semua
+                    </button>
+                </div>
+            </div>
+            <div class="prem-card-body">
+                <form asp-action="SaveMenuAccess" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="roleId" value="@roleId" />
+
+                    <div class="prem-checks" style="max-height:420px;overflow-y:auto;">
+                        @foreach (var menu in allMenus)
+                        {
+                            var isChecked = assigned.Contains(menu.Id);
+                            var isChild = menu.ParentId.HasValue;
+                            var menuIcon = !string.IsNullOrEmpty(menu.IconClass) ? menu.IconClass
+                                         : isChild ? "fas fa-angle-right" : "fas fa-folder";
+                            <div class="prem-check" style="@(isChild ? "padding-left:20px;" : "")">
+                                <input type="checkbox" class="menu-check"
+                                       id="menu_@menu.Id" name="menuIds" value="@menu.Id"
+                                       @(isChecked ? "checked" : "") />
+                                <label for="menu_@menu.Id">
+                                    <span class="prem-check-box"></span>
+                                    <i class="@menuIcon mr-1" style="color:@(isChild ? "rgba(255,255,255,.3)" : "rgba(33,150,243,.6)");width:14px;text-align:center;"></i>
+                                    <span>@menu.MenuName</span>
+                                    @if (!string.IsNullOrEmpty(menu.MenuUrl) && menu.MenuUrl != "#")
+                                    {<span style="font-size:.72rem;color:rgba(255,255,255,.25);margin-left:4px;">@menu.MenuUrl</span>}
+                                </label>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="pf-div" style="margin-top:20px;"></div>
+
+                    <button type="submit" class="prem-submit">
+                        <i class="fas fa-save"></i>Simpan Pengaturan Akses
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function checkAll(val) {
+        document.querySelectorAll('.menu-check').forEach(function(c) { c.checked = val; });
+    }
+</script>
+}

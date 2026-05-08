@@ -1,0 +1,198 @@
+@model List<NavSnap.Models.Entities.SalesVisit>
+@{
+    ViewData["Title"] = "Riwayat Kunjungan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-history mr-2 text-primary"></i>Riwayat Kunjungan Sales
+    </h1>
+    <a class="btn btn-success btn-sm"
+       href="@Url.Action("ExportHistory","SalesTracking", new { userId = ViewBag.SelectedUserId, date = ViewBag.SelectedDate, dateFrom = ViewBag.SelectedDateFrom, dateTo = ViewBag.SelectedDateTo })">
+        <i class="fas fa-file-excel mr-1"></i>Download Excel
+    </a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3" style="background:#f8f9fc;border-bottom:2px solid #e3e6f0;">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter mr-2"></i>Filter</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="form-inline">
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 font-weight-bold small">Sales:</label>
+                <select name="userId" class="form-control form-control-sm">
+                    <option value="">- Semua Sales -</option>
+                    @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
+                    {
+                        <option value="@s.Id" selected="@(ViewBag.SelectedUserId?.ToString() == s.Id.ToString() ? "selected" : null)">
+                            @s.FullName
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 font-weight-bold small">Tanggal:</label>
+                <input type="date" name="date" class="form-control form-control-sm" value="@ViewBag.SelectedDate" />
+            </div>
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 font-weight-bold small">Dari:</label>
+                <input type="date" name="dateFrom" class="form-control form-control-sm" value="@ViewBag.SelectedDateFrom" />
+            </div>
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 font-weight-bold small">Sampai:</label>
+                <input type="date" name="dateTo" class="form-control form-control-sm" value="@ViewBag.SelectedDateTo" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm mb-2">
+                <i class="fas fa-search mr-1"></i>Tampilkan
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (User.IsInRole("Administrator") || User.IsInRole("Pengawas"))
+{
+    <div class="card shadow mb-4">
+        <div class="card-header py-3" style="background:#fff3cd;border-left:4px solid #f6c23e;">
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-plus-circle mr-2 text-warning"></i>Tugaskan Kunjungan Baru</h6>
+        </div>
+        <div class="card-body">
+            <form asp-controller="SalesTracking" asp-action="AssignVisit" method="post" class="form-inline">
+                @Html.AntiForgeryToken()
+                <div class="form-group mr-3 mb-2">
+                    <label class="mr-2 font-weight-bold small">Sales:</label>
+                    <select name="userId" class="form-control form-control-sm" required>
+                        @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
+                        {
+                            <option value="@s.Id">@s.FullName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group mr-3 mb-2">
+                    <label class="mr-2 font-weight-bold small">Checkpoint:</label>
+                    <select name="checkpointId" class="form-control form-control-sm" required id="assignCheckpointSelect">
+                        <option value="">Pilih...</option>
+                    </select>
+                </div>
+                <div class="form-group mr-3 mb-2">
+                    <label class="mr-2 font-weight-bold small">Tanggal:</label>
+                    <input type="date" name="visitDate" class="form-control form-control-sm"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                </div>
+                <button type="submit" class="btn btn-warning btn-sm mb-2 font-weight-bold">
+                    <i class="fas fa-user-plus mr-1"></i>Tugaskan
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+<div class="card shadow">
+    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-table mr-2"></i>Hasil - @Model.Count kunjungan
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Sales</th>
+                        <th>Checkpoint</th>
+                        <th>Lokasi</th>
+                        <th>Tanggal</th>
+                        <th>Status</th>
+                        <th>Jam Kunjung</th>
+                        <th>Koordinat</th>
+                        <th>Keterangan</th>
+                        <th>Foto</th>
+                        <th>Poin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int no = 1;}
+                    @foreach (var v in Model)
+                    {
+                        <tr>
+                            <td>@no++</td>
+                            <td class="small font-weight-bold">@v.User.FullName</td>
+                            <td class="small">@v.Checkpoint.CheckpointName</td>
+                            <td class="small text-muted">@(v.Checkpoint.Address ?? "-")</td>
+                            <td class="small">@v.VisitDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @switch (v.Status)
+                                {
+                                    case "arrived":
+                                        <span class="badge badge-status-arrived">Tiba</span>
+                                        break;
+                                    case "completed":
+                                        <span class="badge badge-status-completed">Selesai</span>
+                                        break;
+                                    case "skipped":
+                                        <span class="badge badge-status-skipped">Dilewati</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-status-pending">Pending</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="small text-muted">@(v.ArrivedAt.HasValue ? v.ArrivedAt.Value.ToLocalTime().ToString("dd/MM HH:mm") : "-")</td>
+                            <td class="small">
+                                @if (v.LatitudeArrived.HasValue)
+                                {
+                                    <a href="https://www.google.com/maps?q=@v.LatitudeArrived,@v.LongitudeArrived" target="_blank" class="text-primary">
+                                        @v.LatitudeArrived?.ToString("F4"), @v.LongitudeArrived?.ToString("F4")
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td class="small text-muted">@(v.Notes ?? "-")</td>
+                            <td class="small">
+                                @if (!string.IsNullOrWhiteSpace(v.VisitPhotoPath))
+                                {
+                                    <a href="@v.VisitPhotoPath" target="_blank" class="text-primary">
+                                        <i class="fas fa-image mr-1"></i>Lihat
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td><span class="badge badge-info">@v.PointEarned</span></td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">Tidak ada data kunjungan</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    fetch('/Checkpoint/GetAllJson')
+        .then(r => r.json())
+        .then(data => {
+            var sel = document.getElementById('assignCheckpointSelect');
+            if (!sel) return;
+            data.forEach(function(cp) {
+                var opt = document.createElement('option');
+                opt.value = cp.id;
+                opt.text = cp.checkpointName;
+                sel.appendChild(opt);
+            });
+        });
+</script>
+}

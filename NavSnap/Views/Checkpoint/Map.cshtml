@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "Peta Checkpoint";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-map mr-2 text-primary"></i>Peta Semua Checkpoint
+    </h1>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>Tambah Checkpoint
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-map-marked-alt mr-2"></i>Peta Checkpoint</h6>
+        <span class="badge badge-light" id="cpCount">Memuat...</span>
+    </div>
+    <div class="card-body p-0">
+        <div id="mapAll" style="height:550px;border-radius:0 0 10px 10px;"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var map = L.map('mapAll').setView([-2.5, 117.5], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors', maxZoom: 19
+    }).addTo(map);
+
+    function cpIcon(color) {
+        return L.divIcon({
+            html: '<div style="background:' + color + ';width:22px;height:22px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.3);"></div>',
+            className: '', iconSize: [22, 22], iconAnchor: [11, 22]
+        });
+    }
+
+    fetch('/Checkpoint/GetAllJson')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('cpCount').textContent = data.length + ' checkpoint';
+            var bounds = [];
+            data.forEach(function(cp) {
+                var icon = cpIcon('#1a5fa8');
+                L.marker([cp.latitude, cp.longitude], { icon })
+                    .addTo(map)
+                    .bindPopup(
+                        '<div style="min-width:180px;">' +
+                        '<strong class="text-primary"><i class="fas fa-map-pin mr-1"></i>' + cp.checkpointName + '</strong><br>' +
+                        '<small class="text-muted">' + (cp.address || 'Alamat tidak tersedia') + '</small><hr style="margin:5px 0;">' +
+                        '<small>📍 ' + cp.latitude.toFixed(5) + ', ' + cp.longitude.toFixed(5) + '</small><br>' +
+                        '<small>🎯 Radius: ' + cp.radiusMeters + ' m</small>' +
+                        '<hr style="margin:5px 0;">' +
+                        '<a href="/Checkpoint/Edit/' + cp.id + '" class="btn btn-warning btn-sm btn-block">Edit</a>' +
+                        '</div>'
+                    );
+                L.circle([cp.latitude, cp.longitude], {
+                    radius: cp.radiusMeters,
+                    color: '#1a5fa8', weight: 1.5,
+                    fillColor: '#2196f3', fillOpacity: 0.12
+                }).addTo(map);
+                bounds.push([cp.latitude, cp.longitude]);
+            });
+            if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+        });
+</script>
+}

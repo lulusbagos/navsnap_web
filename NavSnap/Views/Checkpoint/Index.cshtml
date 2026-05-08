@@ -1,0 +1,84 @@
+@model List<NavSnap.Models.Entities.Checkpoint>
+@{
+    ViewData["Title"] = "Daftar Checkpoint";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-map-pin mr-2 text-primary"></i>Daftar Checkpoint
+    </h1>
+    <div>
+        <a asp-action="Map" class="btn btn-info btn-sm mr-2">
+            <i class="fas fa-map mr-1"></i>Lihat Peta
+        </a>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-1"></i>Tambah Checkpoint
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-list mr-2"></i>Data Checkpoint</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="checkpointTable">
+                <thead class="thead-light">
+                    <tr>
+                        <th width="50">#</th>
+                        <th>Nama Checkpoint</th>
+                        <th>Alamat</th>
+                        <th>Koordinat</th>
+                        <th width="90">Radius</th>
+                        <th width="80">Status</th>
+                        <th width="120">Dibuat</th>
+                        <th width="120">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int no = 1;}
+                    @foreach (var cp in Model)
+                    {
+                        <tr>
+                            <td>@no++</td>
+                            <td>
+                                <i class="fas fa-map-pin text-primary mr-1"></i>
+                                <strong>@cp.CheckpointName</strong>
+                            </td>
+                            <td class="small text-muted">@(cp.Address ?? "—")</td>
+                            <td class="small font-monospace">
+                                <span class="badge badge-light border">@cp.Latitude.ToString("F6"), @cp.Longitude.ToString("F6")</span>
+                            </td>
+                            <td class="text-center"><span class="badge badge-info">@cp.RadiusMeters m</span></td>
+                            <td class="text-center">
+                                @if (cp.IsActive)
+                                { <span class="badge badge-success">Aktif</span> }
+                                else
+                                { <span class="badge badge-secondary">Nonaktif</span> }
+                            </td>
+                            <td class="small text-muted">@cp.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@cp.Id" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@cp.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Hapus checkpoint @cp.CheckpointName?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="8" class="text-center text-muted py-4">Belum ada checkpoint terdaftar</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

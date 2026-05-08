@@ -1,0 +1,88 @@
+@model List<NavSnap.Models.Entities.User>
+@{
+    ViewData["Title"] = "Manajemen User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-users mr-2 text-primary"></i>Manajemen User
+    </h1>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-user-plus mr-1"></i>Tambah User
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-table mr-2"></i>Daftar User (@Model.Count)</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Nama Lengkap</th>
+                        <th>Email</th>
+                        <th>Telepon</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Dibuat</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int no = 1;}
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>@no++</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mr-2"
+                                         style="width:32px;height:32px;font-size:12px;font-weight:700;flex-shrink:0;">
+                                        @u.FullName.First().ToString().ToUpper()
+                                    </div>
+                                    <strong>@u.Username</strong>
+                                </div>
+                            </td>
+                            <td>@u.FullName</td>
+                            <td class="small text-muted">@(u.Email ?? "—")</td>
+                            <td class="small">@(u.Phone ?? "—")</td>
+                            <td>
+                                @foreach (var ur in u.UserRoles)
+                                {
+                                    var badgeColor = ur.Role.RoleName == "Administrator" ? "badge-danger"
+                                                   : ur.Role.RoleName == "Pengawas" ? "badge-warning"
+                                                   : "badge-info";
+                                    <span class="badge @badgeColor mr-1">@ur.Role.RoleName</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (u.IsActive)
+                                { <span class="badge badge-success">Aktif</span> }
+                                else
+                                { <span class="badge badge-secondary">Nonaktif</span> }
+                            </td>
+                            <td class="small text-muted">@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@u.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Hapus user @u.Username?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

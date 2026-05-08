@@ -1,0 +1,67 @@
+@model List<NavSnap.Models.Entities.AttendanceLog>
+@{
+    ViewData["Title"] = "Laporan Absen";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-file-alt mr-2 text-primary"></i>Laporan Absen</h1>
+    <a class="btn btn-success btn-sm" href="@Url.Action("ExportAttendance","Payroll", new { userId = ViewBag.SelectedUserId, dateFrom = ViewBag.SelectedDateFrom, dateTo = ViewBag.SelectedDateTo })">
+        <i class="fas fa-file-excel mr-1"></i>Download Excel
+    </a>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form method="get" class="form-inline">
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 small font-weight-bold">Sales:</label>
+                <select name="userId" class="form-control form-control-sm">
+                    <option value="">- Semua -</option>
+                    @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
+                    {
+                        <option value="@s.Id" selected="@(ViewBag.SelectedUserId?.ToString() == s.Id.ToString() ? "selected" : null)">@s.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 small font-weight-bold">Dari:</label>
+                <input type="date" name="dateFrom" class="form-control form-control-sm" value="@ViewBag.SelectedDateFrom" />
+            </div>
+            <div class="form-group mr-3 mb-2">
+                <label class="mr-2 small font-weight-bold">Sampai:</label>
+                <input type="date" name="dateTo" class="form-control form-control-sm" value="@ViewBag.SelectedDateTo" />
+            </div>
+            <button class="btn btn-primary btn-sm mb-2"><i class="fas fa-search mr-1"></i>Tampilkan</button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr><th>Tanggal</th><th>Nama</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Keterangan</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td>@r.AttendanceDate.ToString("dd/MM/yyyy")</td>
+                            <td>@r.User.FullName</td>
+                            <td>@(r.CheckInAt?.ToLocalTime().ToString("HH:mm") ?? "-")</td>
+                            <td>@(r.CheckOutAt?.ToLocalTime().ToString("HH:mm") ?? "-")</td>
+                            <td>@r.Status</td>
+                            <td class="small text-muted">@(r.Notes ?? "-")</td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

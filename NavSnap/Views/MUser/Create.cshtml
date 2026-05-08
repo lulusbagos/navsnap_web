@@ -1,0 +1,102 @@
+@model NavSnap.Models.ViewModels.MUserViewModel
+@{
+    bool isEdit = !string.IsNullOrEmpty(Model.Nrp);
+    ViewData["Title"] = isEdit ? "Edit User Mobile" : "Tambah User Mobile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-mobile-alt"></i></div>
+        <div>
+            <p class="pf-page-title">@ViewData["Title"]</p>
+            <p class="pf-page-sub">Data akun untuk integrasi aplikasi mobile</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="prem-card">
+            <div class="prem-card-head">
+                <div class="prem-card-head-ico"><i class="fas fa-user-cog"></i></div>
+                <h6>Form User Mobile</h6>
+            </div>
+            <div class="prem-card-body">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" style="background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.3);border-radius:10px;padding:10px 14px;font-size:.82rem;color:#ef5350;margin-bottom:16px;"></div>
+
+                    <div class="pf-sec"><i class="fas fa-id-badge"></i>Akun Mobile</div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label asp-for="Nrp"></label>
+                                @if (isEdit)
+                                {
+                                    <input asp-for="Nrp" readonly />
+                                }
+                                else
+                                {
+                                    <input asp-for="Nrp" placeholder="Masukkan NRP" />
+                                }
+                                <span asp-validation-for="Nrp" class="val-err"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label asp-for="User"></label>
+                                <input asp-for="User" placeholder="Masukkan username mobile" />
+                                <span asp-validation-for="User" class="val-err"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf">
+                        <label asp-for="Password">Password @(isEdit ? "(kosongkan jika tidak diubah)" : "")</label>
+                        <input asp-for="Password" type="text" placeholder="Masukkan password" />
+                        <span asp-validation-for="Password" class="val-err"></span>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-link"></i>Metadata Mobile</div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label asp-for="TerakhirLogin"></label>
+                                <input asp-for="TerakhirLogin" type="datetime-local"
+                                       value="@(Model.TerakhirLogin.HasValue ? Model.TerakhirLogin.Value.ToString("yyyy-MM-ddTHH:mm") : "")" />
+                                <span asp-validation-for="TerakhirLogin" class="val-err"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label class="pf-lbl">Status</label>
+                                <div class="prem-toggle">
+                                    <input asp-for="Status" type="checkbox" class="prem-toggle-input" id="statusActive" />
+                                    <label for="statusActive" class="prem-toggle-track"><span class="prem-toggle-thumb"></span></label>
+                                    <span class="prem-toggle-lbl">User Aktif</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf">
+                        <label asp-for="PathFotoProfile"></label>
+                        <input asp-for="PathFotoProfile" placeholder="Contoh: /uploads/profile/u123.jpg" />
+                        <span asp-validation-for="PathFotoProfile" class="val-err"></span>
+                    </div>
+
+                    <button type="submit" class="prem-submit">
+                        <i class="fas fa-save"></i>Simpan User Mobile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

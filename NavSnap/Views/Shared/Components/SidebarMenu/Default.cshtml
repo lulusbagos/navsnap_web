@@ -1,0 +1,56 @@
+@model List<NavSnap.Models.Entities.Menu>
+@{
+    var currentUrl = ViewContext.HttpContext.Request.Path.Value ?? "";
+    var parents = Model.Where(m => m.ParentId == null).ToList();
+}
+
+@foreach (var menu in parents)
+{
+    var children = Model.Where(m => m.ParentId == menu.Id).ToList();
+    bool hasChildren = children.Any();
+    bool isActive = currentUrl.StartsWith(menu.MenuUrl ?? "~~", StringComparison.OrdinalIgnoreCase);
+    string collapseId = "collapse_" + menu.Id;
+
+    if (hasChildren)
+    {
+        <li class="nav-item @(isActive ? "active" : "")">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse"
+               data-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                <i class="@menu.IconClass"></i>
+                <span>@menu.MenuName</span>
+            </a>
+            <div id="@collapseId" class="collapse @(isActive ? "show" : "")" aria-labelledby="heading@collapseId"
+                 data-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    @foreach (var child in children)
+                    {
+                        bool childActive = currentUrl.Equals(child.MenuUrl ?? "~~", StringComparison.OrdinalIgnoreCase);
+                        <a class="collapse-item @(childActive ? "active" : "")" href="@child.MenuUrl">
+                            <i class="@child.IconClass mr-1 small"></i> @child.MenuName
+                        </a>
+                    }
+                </div>
+            </div>
+        </li>
+    }
+    else if (!string.IsNullOrEmpty(menu.MenuUrl) && menu.MenuUrl != "#")
+    {
+        bool exact = currentUrl.Equals(menu.MenuUrl, StringComparison.OrdinalIgnoreCase);
+        <li class="nav-item @(exact ? "active" : "")">
+            <a class="nav-link" href="@menu.MenuUrl">
+                <i class="@menu.IconClass"></i>
+                <span>@menu.MenuName</span>
+            </a>
+        </li>
+    }
+    else
+    {
+        <!-- Section divider for header-only items with no URL -->
+        <hr class="sidebar-divider" />
+        <div class="sidebar-heading text-uppercase text-white-50 px-3 py-2" style="font-size:0.7rem;letter-spacing:0.1em;">
+            @menu.MenuName
+        </div>
+    }
+}
+
+<hr class="sidebar-divider d-none d-md-block" />

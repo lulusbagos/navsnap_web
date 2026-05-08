@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Payroll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-money-check-alt mr-2 text-primary"></i>Payroll & HRIS</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted small mb-2">Absen Hari Ini</h6>
+                <h3 class="mb-0">@ViewBag.TodayPresent</h3>
+                <p class="small text-muted mt-2 mb-0">karyawan check-in</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted small mb-2">Izin Pending</h6>
+                <h3 class="mb-0">@ViewBag.PendingLeave</h3>
+                <p class="small text-muted mt-2 mb-0">menunggu approval</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted small mb-2">Lembur Pending</h6>
+                <h3 class="mb-0">@ViewBag.PendingOvertime</h3>
+                <p class="small text-muted mt-2 mb-0">menunggu approval</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 mb-3">
+        <a href="/Payroll/AttendanceSettings" class="card h-100 d-block text-decoration-none">
+            <div class="card-body">
+                <h5 class="mb-2"><i class="fas fa-map-marked-alt mr-2"></i>Setting Lokasi Absen</h5>
+                <p class="text-muted small mb-0">Atur titik lokasi dan radius valid absensi.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 mb-3">
+        <a href="/Payroll/AttendanceReport" class="card h-100 d-block text-decoration-none">
+            <div class="card-body">
+                <h5 class="mb-2"><i class="fas fa-file-alt mr-2"></i>Laporan Absen</h5>
+                <p class="text-muted small mb-0">Lihat rekap absen dan unduh ke Excel (CSV).</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-4 mb-3">
+        <a href="/Payroll/LeaveOvertime" class="card h-100 d-block text-decoration-none">
+            <div class="card-body">
+                <h5 class="mb-2"><i class="fas fa-user-clock mr-2"></i>Izin & Lembur</h5>
+                <p class="text-muted small mb-0">Pengajuan dan approval izin / lembur.</p>
+            </div>
+        </a>
+    </div>
+</div>

@@ -1,0 +1,114 @@
+@model NavSnap.Models.Entities.Menu
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Menu" : "Tambah Menu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var parents = ViewBag.Parents as List<NavSnap.Models.Entities.Menu> ?? new();
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-bars"></i></div>
+        <div>
+            <p class="pf-page-title">@ViewData["Title"]</p>
+            <p class="pf-page-sub">@(isEdit ? "Perbarui konfigurasi item menu" : "Tambahkan item baru ke menu navigasi")</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="prem-card">
+            <div class="prem-card-head">
+                <div class="prem-card-head-ico"><i class="fas fa-edit"></i></div>
+                <h6>Form Menu</h6>
+            </div>
+            <div class="prem-card-body">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+                    @Html.HiddenFor(m => m.CreatedAt)
+
+                    <div class="pf-sec"><i class="fas fa-info-circle"></i>Informasi Menu</div>
+
+                    <div class="pf">
+                        <label>Nama Menu</label>
+                        <input asp-for="MenuName" placeholder="Contoh: Dashboard" required />
+                    </div>
+
+                    <div class="pf">
+                        <label>URL / Path</label>
+                        <input asp-for="MenuUrl" placeholder="/Controller/Action  atau  # untuk header grup" />
+                        <span class="f-hint">Gunakan <code style="background:rgba(33,150,243,.1);color:#42a5f5;border-radius:4px;padding:1px 5px;">#</code> untuk item yang hanya sebagai header/pemisah grup</span>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-palette"></i>Tampilan</div>
+
+                    <div class="pf">
+                        <label>Icon Class (Font Awesome)</label>
+                        <div class="pf-grp">
+                            <span class="pf-app" style="border-right:none;border-radius:10px 0 0 10px;min-width:42px;justify-content:center;">
+                                <i id="previewIcon" class="fas fa-circle" style="font-size:14px;"></i>
+                            </span>
+                            <input asp-for="IconClass" placeholder="fas fa-tachometer-alt"
+                                   oninput="document.getElementById('previewIcon').className=this.value||'fas fa-circle'"
+                                   style="border-left:none!important;border-radius:0 10px 10px 0!important;" />
+                        </div>
+                        <span class="f-hint">Cari ikon di <a href="https://fontawesome.com/icons" target="_blank" style="color:rgba(33,150,243,.7);">fontawesome.com/icons</a></span>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-sitemap"></i>Hierarki & Urutan</div>
+
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="pf">
+                                <label>Parent Menu</label>
+                                <select asp-for="ParentId">
+                                    <option value="">— Root (tidak ada parent) —</option>
+                                    @foreach (var p in parents)
+                                    {
+                                        <option value="@p.Id" selected="@(Model.ParentId == p.Id ? "selected" : null)">@p.MenuName</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="pf">
+                                <label>Urutan Tampil</label>
+                                <input asp-for="SortOrder" type="number" min="0" placeholder="0" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf-div"></div>
+
+                    <div class="pf">
+                        <label class="pf-lbl">Status</label>
+                        <div class="prem-toggle">
+                            <input asp-for="IsActive" type="checkbox" class="prem-toggle-input" id="isActive" />
+                            <label for="isActive" class="prem-toggle-track"><span class="prem-toggle-thumb"></span></label>
+                            <span class="prem-toggle-lbl">Menu Aktif (tampil di sidebar)</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="prem-submit">
+                        <i class="fas fa-save"></i>Simpan Menu
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var iconInput = document.querySelector('[name="IconClass"]');
+    if (iconInput && iconInput.value) {
+        document.getElementById('previewIcon').className = iconInput.value;
+    }
+</script>
+}

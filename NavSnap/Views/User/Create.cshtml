@@ -1,0 +1,130 @@
+@model NavSnap.Models.ViewModels.UserViewModel
+@{
+    bool isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit User" : "Tambah User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var allRoles = ViewBag.Roles as List<NavSnap.Models.Entities.Role> ?? new();
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-user-@(isEdit?"edit":"plus")"></i></div>
+        <div>
+            <p class="pf-page-title">@ViewData["Title"]</p>
+            <p class="pf-page-sub">@(isEdit ? "Perbarui data pengguna sistem" : "Tambahkan pengguna baru ke sistem")</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="prem-card">
+            <div class="prem-card-head">
+                <div class="prem-card-head-ico"><i class="fas fa-user-circle"></i></div>
+                <h6>Form User</h6>
+            </div>
+            <div class="prem-card-body">
+                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+
+                    <div asp-validation-summary="ModelOnly" style="background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.3);border-radius:10px;padding:10px 14px;font-size:.82rem;color:#ef5350;margin-bottom:16px;"></div>
+
+                    <div class="pf-sec"><i class="fas fa-id-badge"></i>Akun Login</div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label>Username</label>
+                                @if (isEdit)
+                                {
+                                    <input asp-for="Username" placeholder="Username unik" readonly />
+                                }
+                                else
+                                {
+                                    <input asp-for="Username" placeholder="Username unik" />
+                                }
+                                <span asp-validation-for="Username" class="val-err"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label>Password @(isEdit ? "<span style='font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.3);font-size:.68rem;'>(kosongkan jika tidak diubah)</span>" : "")</label>
+                                @{ var pwPlaceholder = isEdit ? "Kosongkan jika tidak diubah" : "Masukkan password"; }
+                                <input asp-for="Password" type="text" placeholder="@pwPlaceholder" />
+                                <span asp-validation-for="Password" class="val-err"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-address-card"></i>Informasi Pribadi</div>
+
+                    <div class="pf">
+                        <label>Nama Lengkap</label>
+                        <input asp-for="FullName" placeholder="Nama lengkap pengguna" />
+                        <span asp-validation-for="FullName" class="val-err"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label>Email</label>
+                                <input asp-for="Email" placeholder="Email (opsional)" />
+                                <span asp-validation-for="Email" class="val-err"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="pf">
+                                <label>No. Telepon</label>
+                                <input asp-for="Phone" placeholder="No. telepon (opsional)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-key"></i>Hak Akses Role</div>
+
+                    <div class="pf">
+                        <div class="prem-checks">
+                            @foreach (var role in allRoles)
+                            {
+                                var isChecked = Model.SelectedRoleIds.Contains(role.Id);
+                                var rbadge = role.RoleName == "Administrator" ? "rbadge-admin"
+                                           : role.RoleName == "Pengawas" ? "rbadge-pengawas"
+                                           : role.RoleName == "Sales" ? "rbadge-sales" : "rbadge-other";
+                                <div class="prem-check">
+                                    <input type="checkbox" id="role_@role.Id" name="SelectedRoleIds"
+                                           value="@role.Id" @(isChecked ? "checked" : "") />
+                                    <label for="role_@role.Id">
+                                        <span class="prem-check-box"></span>
+                                        <span class="rbadge @rbadge mr-1">@role.RoleName</span>
+                                        @if (!string.IsNullOrEmpty(role.Description))
+                                        {<span style="font-size:.78rem;color:rgba(255,255,255,.3);">— @role.Description</span>}
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="pf-div"></div>
+
+                    <div class="pf">
+                        <label class="pf-lbl">Status</label>
+                        <div class="prem-toggle">
+                            <input asp-for="IsActive" type="checkbox" class="prem-toggle-input" id="isActive" />
+                            <label for="isActive" class="prem-toggle-track"><span class="prem-toggle-thumb"></span></label>
+                            <span class="prem-toggle-lbl">User Aktif</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="prem-submit">
+                        <i class="fas fa-save"></i>Simpan User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

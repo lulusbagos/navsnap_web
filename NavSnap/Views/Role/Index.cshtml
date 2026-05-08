@@ -1,0 +1,57 @@
+@model List<NavSnap.Models.Entities.Role>
+@{
+    ViewData["Title"] = "Manajemen Role";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+        <i class="fas fa-user-shield mr-2 text-primary"></i>Manajemen Role
+    </h1>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus mr-1"></i>Tambah Role
+    </a>
+</div>
+
+<div class="row">
+    @foreach (var role in Model)
+    {
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex align-items-center justify-content-between"
+                     style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-user-shield mr-2"></i>@role.RoleName
+                    </h6>
+                    @if (role.IsActive)
+                    { <span class="badge badge-light">Aktif</span> }
+                    else
+                    { <span class="badge badge-secondary">Nonaktif</span> }
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">@(role.Description ?? "Tidak ada deskripsi")</p>
+                    <div class="d-flex justify-content-between small text-muted mb-3">
+                        <span><i class="fas fa-users mr-1"></i>@role.UserRoles.Count user</span>
+                        <span><i class="fas fa-bars mr-1"></i>@role.RoleMenus.Count menu</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a asp-action="AccessMenu" asp-route-id="@role.Id"
+                       class="btn btn-info btn-sm mr-1" title="Atur Akses Menu">
+                        <i class="fas fa-key mr-1"></i>Akses Menu
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-warning btn-sm mr-1">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('Hapus role @role.RoleName?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

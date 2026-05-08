@@ -1,0 +1,64 @@
+@model NavSnap.Models.ViewModels.AttendanceSettingViewModel
+@{
+    ViewData["Title"] = "Setting Lokasi Absen";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-map-marked-alt"></i></div>
+        <div>
+            <p class="pf-page-title">Setting Lokasi Absen</p>
+            <p class="pf-page-sub">Tentukan titik dan radius absensi via maps.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="prem-card">
+            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-sliders-h"></i></div><h6>Form Setting</h6></div>
+            <div class="prem-card-body">
+                <form method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="pf"><label asp-for="LocationName"></label><input asp-for="LocationName" /><span asp-validation-for="LocationName" class="val-err"></span></div>
+                    <div class="row">
+                        <div class="col-md-6"><div class="pf"><label asp-for="Latitude"></label><input asp-for="Latitude" id="latInput" /><span asp-validation-for="Latitude" class="val-err"></span></div></div>
+                        <div class="col-md-6"><div class="pf"><label asp-for="Longitude"></label><input asp-for="Longitude" id="lngInput" /><span asp-validation-for="Longitude" class="val-err"></span></div></div>
+                    </div>
+                    <div class="pf"><label asp-for="RadiusMeters"></label><input asp-for="RadiusMeters" type="number" min="10" /><span asp-validation-for="RadiusMeters" class="val-err"></span></div>
+                    <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7 mb-4">
+        <div class="prem-card h-100">
+            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-map"></i></div><h6>Pilih Titik Lokasi</h6></div>
+            <div class="prem-card-body" style="padding:0;">
+                <div id="attMap" style="height:450px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var lat = parseFloat(document.getElementById('latInput').value || '-6.2');
+    var lng = parseFloat(document.getElementById('lngInput').value || '106.8');
+    var map = L.map('attMap').setView([lat, lng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+    var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    function syncLatLng(p) {
+        document.getElementById('latInput').value = p.lat.toFixed(6);
+        document.getElementById('lngInput').value = p.lng.toFixed(6);
+    }
+    marker.on('dragend', function(e){ syncLatLng(e.target.getLatLng()); });
+    map.on('click', function(e){
+        marker.setLatLng(e.latlng);
+        syncLatLng(e.latlng);
+    });
+</script>
+}

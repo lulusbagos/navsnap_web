@@ -1,0 +1,119 @@
+@{
+    ViewData["Title"] = "Izin & Lembur";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var leaves = ViewBag.Leaves as List<NavSnap.Models.Entities.LeaveRequest> ?? new();
+    var overtimes = ViewBag.Overtimes as List<NavSnap.Models.Entities.OvertimeRequest> ?? new();
+    var canApprove = User.IsInRole("Administrator") || User.IsInRole("Pengawas");
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-user-clock mr-2 text-primary"></i>Izin & Lembur</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Pengajuan Izin</h6></div>
+            <div class="card-body">
+                <form asp-action="SubmitLeave" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="form-group">
+                        <label>Tipe</label>
+                        <select class="form-control" name="LeaveType">
+                            <option value="izin">Izin</option>
+                            <option value="sakit">Sakit</option>
+                            <option value="cuti">Cuti</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col"><div class="form-group"><label>Dari</label><input type="date" class="form-control" name="LeaveDateFrom" required /></div></div>
+                        <div class="col"><div class="form-group"><label>Sampai</label><input type="date" class="form-control" name="LeaveDateTo" required /></div></div>
+                    </div>
+                    <div class="form-group"><label>Alasan</label><textarea class="form-control" name="Reason"></textarea></div>
+                    <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Izin</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Pengajuan Lembur</h6></div>
+            <div class="card-body">
+                <form asp-action="SubmitOvertime" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col"><div class="form-group"><label>Tanggal</label><input type="date" class="form-control" name="OvertimeDate" required /></div></div>
+                        <div class="col"><div class="form-group"><label>Jam Lembur</label><input type="number" min="0.5" step="0.5" class="form-control" name="Hours" required /></div></div>
+                    </div>
+                    <div class="form-group"><label>Alasan</label><textarea class="form-control" name="Reason"></textarea></div>
+                    <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Lembur</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daftar Izin</h6></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="thead-light"><tr><th>Nama</th><th>Periode</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                        @foreach (var l in leaves)
+                        {
+                            <tr>
+                                <td>@l.User.FullName</td>
+                                <td>@l.LeaveDateFrom.ToString("dd/MM") - @l.LeaveDateTo.ToString("dd/MM")</td>
+                                <td>@l.LeaveType</td>
+                                <td>@l.Status</td>
+                                <td>
+                                    @if (canApprove && l.Status == "pending")
+                                    {
+                                        <form asp-action="ApproveLeave" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@l.Id" /><button class="btn btn-success btn-sm" name="actionType" value="approve"><i class="fas fa-check"></i></button></form>
+                                        <form asp-action="ApproveLeave" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@l.Id" /><button class="btn btn-danger btn-sm" name="actionType" value="reject"><i class="fas fa-times"></i></button></form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!leaves.Any()) { <tr><td colspan="5" class="text-center text-muted py-3">Belum ada data izin.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daftar Lembur</h6></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="thead-light"><tr><th>Nama</th><th>Tanggal</th><th>Jam</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                        @foreach (var o in overtimes)
+                        {
+                            <tr>
+                                <td>@o.User.FullName</td>
+                                <td>@o.OvertimeDate.ToString("dd/MM/yyyy")</td>
+                                <td>@o.Hours</td>
+                                <td>@o.Status</td>
+                                <td>
+                                    @if (canApprove && o.Status == "pending")
+                                    {
+                                        <form asp-action="ApproveOvertime" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.Id" /><button class="btn btn-success btn-sm" name="actionType" value="approve"><i class="fas fa-check"></i></button></form>
+                                        <form asp-action="ApproveOvertime" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.Id" /><button class="btn btn-danger btn-sm" name="actionType" value="reject"><i class="fas fa-times"></i></button></form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!overtimes.Any()) { <tr><td colspan="5" class="text-center text-muted py-3">Belum ada data lembur.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
