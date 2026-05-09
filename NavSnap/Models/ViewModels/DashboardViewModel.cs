@@ -10,6 +10,11 @@ namespace NavSnap.Models.ViewModels
         public int SalesTotal { get; set; }
         public int SalesActiveToday { get; set; }
         public double AvgAchievementPercent { get; set; }
+        public double VisitCompletionRate { get; set; }
+        public int PendingStoreSubmissions { get; set; }
+        public int PendingLeaveApprovals { get; set; }
+        public int PendingOvertimeApprovals { get; set; }
+        public int TotalPendingApprovals { get; set; }
         public List<RecentVisitItem> RecentVisits { get; set; } = new();
         public List<SalesStatusItem> SalesOnline { get; set; } = new();
         public List<SalesPerformanceItem> SalesPerformances { get; set; } = new();

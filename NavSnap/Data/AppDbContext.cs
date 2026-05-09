@@ -13,6 +13,7 @@ namespace NavSnap.Data
         public DbSet<StoreSubmission> StoreSubmissions { get; set; }
         public DbSet<SalesDailyTarget> SalesDailyTargets { get; set; }
         public DbSet<AttendanceSetting> AttendanceSettings { get; set; }
+        public DbSet<AttendanceGeofencePoint> AttendanceGeofencePoints { get; set; }
         public DbSet<AttendanceLog> AttendanceLogs { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<OvertimeRequest> OvertimeRequests { get; set; }
@@ -22,7 +23,9 @@ namespace NavSnap.Data
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RoleMenu> RoleMenus { get; set; }
         public DbSet<SalesVisit> SalesVisits { get; set; }
+        public DbSet<SalesVisitSchedule> SalesVisitSchedules { get; set; }
         public DbSet<GpsLog> GpsLogs { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -159,10 +162,48 @@ namespace NavSnap.Data
                 .HasForeignKey(t => t.CreatedBy)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<SalesVisitSchedule>()
+                .HasIndex(t => new { t.UserId, t.CheckpointId, t.ScheduleDate, t.StartTime, t.EndTime })
+                .IsUnique();
+
+            modelBuilder.Entity<SalesVisitSchedule>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SalesVisitSchedule>()
+                .HasOne(t => t.Checkpoint)
+                .WithMany()
+                .HasForeignKey(t => t.CheckpointId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SalesVisitSchedule>()
+                .HasOne(t => t.Creator)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<SalesVisitSchedule>()
+                .HasOne(t => t.SourceSubmission)
+                .WithMany()
+                .HasForeignKey(t => t.SourceSubmissionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<AttendanceLog>()
                 .HasOne(t => t.User)
                 .WithMany()
                 .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AttendanceGeofencePoint>()
+                .HasIndex(p => new { p.AttendanceSettingId, p.SeqNo })
+                .IsUnique();
+
+            modelBuilder.Entity<AttendanceGeofencePoint>()
+                .HasOne(p => p.AttendanceSetting)
+                .WithMany(s => s.GeofencePoints)
+                .HasForeignKey(p => p.AttendanceSettingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<LeaveRequest>()
@@ -187,6 +228,15 @@ namespace NavSnap.Data
                 .HasOne(t => t.Approver)
                 .WithMany()
                 .HasForeignKey(t => t.ApprovedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<AuditLog>()
+                .HasIndex(a => new { a.Module, a.CreatedAt });
+
+            modelBuilder.Entity<AuditLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }

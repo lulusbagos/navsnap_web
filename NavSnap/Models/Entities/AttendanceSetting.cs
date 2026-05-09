@@ -32,5 +32,7 @@ namespace NavSnap.Models.Entities
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public ICollection<AttendanceGeofencePoint> GeofencePoints { get; set; } = new List<AttendanceGeofencePoint>();
     }
 }

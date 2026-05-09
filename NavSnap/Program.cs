@@ -6,10 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Services ---
 builder.Services.AddControllersWithViews();
 
-var connStr =
-    builder.Configuration.GetConnectionString("Postgres")
-    ?? builder.Configuration["NAVSNAP_POSTGRES"]
-    ?? Environment.GetEnvironmentVariable("NAVSNAP_POSTGRES");
+var connStr = builder.Configuration.GetConnectionString("Postgres");
+if (string.IsNullOrWhiteSpace(connStr))
+{
+    connStr = builder.Configuration["NAVSNAP_POSTGRES"];
+}
+if (string.IsNullOrWhiteSpace(connStr))
+{
+    connStr = Environment.GetEnvironmentVariable("NAVSNAP_POSTGRES");
+}
 
 if (string.IsNullOrWhiteSpace(connStr))
 {
@@ -40,6 +45,13 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
+// --- Startup DB seed / schema sync ---
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbSeeder.SeedAsync(db);
+}
+
 // --- Middleware ---
 if (!app.Environment.IsDevelopment())
 {
@@ -47,7 +59,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (!string.IsNullOrWhiteSpace(builder.Configuration["ASPNETCORE_HTTPS_PORT"]))
+{
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
@@ -57,13 +72,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// --- Seed DB ---
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db);
-}
 
 var bindUrl =
     builder.Configuration["ASPNETCORE_URLS"]

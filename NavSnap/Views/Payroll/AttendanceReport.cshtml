@@ -2,66 +2,334 @@
 @{
     ViewData["Title"] = "Laporan Absen";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var totalHadir    = Model.Count(r => r.Status?.ToLower() == "hadir");
+    var totalTerlambat = Model.Count(r => r.Status?.ToLower() == "terlambat");
+    var totalAbsen    = Model.Count(r => r.Status?.ToLower() == "absen");
+    var totalIzin     = Model.Count(r => new[]{"izin","sakit","cuti"}.Contains(r.Status?.ToLower()));
+    var total         = Model.Count;
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-file-alt mr-2 text-primary"></i>Laporan Absen</h1>
-    <a class="btn btn-success btn-sm" href="@Url.Action("ExportAttendance","Payroll", new { userId = ViewBag.SelectedUserId, dateFrom = ViewBag.SelectedDateFrom, dateTo = ViewBag.SelectedDateTo })">
-        <i class="fas fa-file-excel mr-1"></i>Download Excel
-    </a>
+@section Styles {
+<style>
+/* ─── Header ─── */
+.ar-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem; animation:arFade .4s ease both; }
+.ar-header-left h2 { font-size:1.35rem; font-weight:700; color:#1a2035; margin:0 0 .15rem; }
+.ar-header-left p  { font-size:.8rem; color:#8a94a6; margin:0; }
+.ar-header-actions { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+
+.ar-back { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .9rem; border-radius:9px; background:#f0f2f8; color:#5a6a82; font-size:.8rem; font-weight:600; text-decoration:none; transition:background .15s; }
+.ar-back:hover { background:#e2e8f0; text-decoration:none; color:#2d3748; }
+.ar-export { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1.05rem; border-radius:9px; background:linear-gradient(135deg,#1cc88a,#17a673); color:#fff; font-size:.8rem; font-weight:700; text-decoration:none; box-shadow:0 4px 12px rgba(28,200,138,.3); transition:transform .15s, box-shadow .15s; }
+.ar-export:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(28,200,138,.4); text-decoration:none; color:#fff; }
+
+/* ─── Stats Cards ─── */
+.ar-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.25rem; }
+@@media(max-width:768px){ .ar-stats{ grid-template-columns:repeat(2,1fr); } }
+@@media(max-width:400px){ .ar-stats{ grid-template-columns:1fr; } }
+
+.ar-stat { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.07); padding:1.1rem 1.25rem; display:flex; align-items:center; gap:1rem; animation:arFadeUp .45s ease both; position:relative; overflow:hidden; }
+.ar-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
+.ar-stat.hadir::before   { background:linear-gradient(90deg,#059669,#34d399); }
+.ar-stat.terlambat::before { background:linear-gradient(90deg,#d97706,#fbbf24); }
+.ar-stat.absen::before   { background:linear-gradient(90deg,#dc2626,#f87171); }
+.ar-stat.izin::before    { background:linear-gradient(90deg,#2563eb,#60a5fa); }
+.ar-stat:nth-child(1){ animation-delay:.05s }
+.ar-stat:nth-child(2){ animation-delay:.10s }
+.ar-stat:nth-child(3){ animation-delay:.15s }
+.ar-stat:nth-child(4){ animation-delay:.20s }
+
+.ar-stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.ar-stat.hadir   .ar-stat-icon { background:#ecfdf5; color:#059669; }
+.ar-stat.terlambat .ar-stat-icon { background:#fffbeb; color:#d97706; }
+.ar-stat.absen   .ar-stat-icon { background:#fef2f2; color:#dc2626; }
+.ar-stat.izin    .ar-stat-icon { background:#eff6ff; color:#2563eb; }
+
+.ar-stat-val { font-size:1.55rem; font-weight:800; line-height:1; color:#1a2035; }
+.ar-stat-label { font-size:.73rem; font-weight:600; color:#8a94a6; margin-top:.2rem; text-transform:uppercase; letter-spacing:.04em; }
+.ar-stat-pct { font-size:.7rem; color:#a0aec0; margin-top:.1rem; }
+
+/* ─── Filter Card ─── */
+.ar-filter-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.07); overflow:hidden; margin-bottom:1.25rem; animation:arFadeUp .45s ease .25s both; }
+.ar-filter-header { padding:.85rem 1.25rem; background:linear-gradient(135deg,#1a3a6e,#2d6bc4); display:flex; align-items:center; justify-content:space-between; }
+.ar-filter-header-left { display:flex; align-items:center; gap:.5rem; color:#fff; font-size:.88rem; font-weight:700; }
+.ar-filter-header small { color:rgba(255,255,255,.55); font-size:.72rem; }
+.ar-filter-body { padding:1.1rem 1.25rem; display:flex; flex-wrap:wrap; gap:.85rem; align-items:flex-end; }
+
+.ar-fld { display:flex; flex-direction:column; gap:.28rem; }
+.ar-fld label { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#5a6a82; }
+.ar-fld select, .ar-fld input[type=date] {
+    border:1.5px solid #e2e8f0; border-radius:9px; padding:.47rem .8rem;
+    font-size:.82rem; color:#2d3748; background:#fff; outline:none;
+    transition:border .2s; font-family:inherit; min-width:140px;
+}
+.ar-fld select:focus, .ar-fld input[type=date]:focus { border-color:#4e73df; box-shadow:0 0 0 3px rgba(78,115,223,.1); }
+.ar-btn-search { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem 1.15rem; border-radius:9px; border:none; background:linear-gradient(135deg,#4e73df,#224abe); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; transition:transform .15s, box-shadow .15s; font-family:inherit; }
+.ar-btn-search:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(78,115,223,.35); }
+.ar-btn-reset { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .9rem; border-radius:9px; border:1.5px solid #e2e8f0; background:#fff; color:#5a6a82; font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:none; transition:background .15s; font-family:inherit; }
+.ar-btn-reset:hover { background:#f0f2f8; text-decoration:none; color:#2d3748; }
+
+/* ─── Table Card ─── */
+.ar-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; animation:arFadeUp .5s ease .3s both; }
+.ar-card-header { padding:.9rem 1.25rem; background:linear-gradient(135deg,#1a3a6e,#2d6bc4); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem; }
+.ar-card-header-title { display:flex; align-items:center; gap:.55rem; color:#fff; font-size:.9rem; font-weight:700; }
+.ar-count { background:rgba(255,255,255,.18); border-radius:20px; padding:.15rem .6rem; font-size:.73rem; font-weight:700; color:#fff; }
+
+.ar-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.ar-table thead th { padding:.7rem 1rem; background:#f8f9fc; color:#5a5c69; font-weight:700; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:2px solid #e3e6f0; white-space:nowrap; }
+.ar-table tbody tr { border-bottom:1px solid #f0f2f8; transition:background .12s; }
+.ar-table tbody tr:last-child { border-bottom:none; }
+.ar-table tbody tr:hover td { background:#f4f7ff; }
+.ar-table td { padding:.7rem 1rem; vertical-align:middle; color:#3d4a5c; }
+.ar-table td:first-child { border-left:3px solid transparent; }
+.ar-table tbody tr.row-hadir td:first-child     { border-left-color:#059669; }
+.ar-table tbody tr.row-terlambat td:first-child  { border-left-color:#d97706; }
+.ar-table tbody tr.row-absen td:first-child      { border-left-color:#dc2626; }
+.ar-table tbody tr.row-izin td:first-child       { border-left-color:#2563eb; }
+
+/* Avatar */
+.ar-avatar { width:32px; height:32px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:800; color:#fff; flex-shrink:0; text-transform:uppercase; }
+.ar-name-cell { display:flex; align-items:center; gap:.6rem; }
+.ar-name-text { font-size:.83rem; font-weight:600; color:#2d3748; white-space:nowrap; }
+
+/* Date cell */
+.ar-date-main { font-size:.83rem; font-weight:600; color:#2d3748; }
+.ar-date-sub  { font-size:.7rem; color:#a0aec0; margin-top:1px; }
+
+/* Time cell */
+.ar-time-val { font-size:.83rem; font-weight:700; color:#2d3748; font-variant-numeric:tabular-nums; }
+.ar-time-nil { color:#cbd5e0; font-size:.82rem; }
+
+/* Duration */
+.ar-dur { font-size:.75rem; font-weight:700; color:#4e73df; background:#eff3ff; border-radius:6px; padding:.15rem .45rem; white-space:nowrap; display:inline-block; }
+
+/* Status badge */
+.ar-status { display:inline-flex; align-items:center; gap:.35rem; padding:.22rem .7rem; border-radius:20px; font-size:.73rem; font-weight:700; white-space:nowrap; }
+.ar-status.hadir     { background:#d1fae5; color:#065f46; }
+.ar-status.terlambat { background:#fef3c7; color:#92400e; }
+.ar-status.absen     { background:#fee2e2; color:#991b1b; }
+.ar-status.izin      { background:#dbeafe; color:#1e40af; }
+.ar-status-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+
+/* Notes */
+.ar-notes { font-size:.76rem; color:#718096; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Empty */
+.ar-empty { text-align:center; padding:4rem 1rem; color:#a0aec0; }
+.ar-empty-icon { font-size:3rem; opacity:.25; display:block; margin-bottom:1rem; }
+.ar-empty p { font-size:.84rem; margin:0; }
+
+@@keyframes arFade    { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@@keyframes arFadeUp  { from{opacity:0;transform:translateY(14px)}  to{opacity:1;transform:translateY(0)} }
+</style>
+}
+
+<!-- ── Header ── -->
+<div class="ar-header">
+    <div class="ar-header-left">
+        <h2><i class="fas fa-clipboard-list mr-2" style="color:#4e73df;"></i>Laporan Kehadiran</h2>
+        <p>Rekap absensi harian karyawan &mdash; filter & ekspor data</p>
+    </div>
+    <div class="ar-header-actions">
+        <a href="/Payroll/Index" class="ar-back"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+        <a href="@Url.Action("ExportAttendance","Payroll", new { userId = ViewBag.SelectedUserId, dateFrom = ViewBag.SelectedDateFrom, dateTo = ViewBag.SelectedDateTo })" class="ar-export">
+            <i class="fas fa-file-csv mr-1"></i>Export CSV
+        </a>
+    </div>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-body">
-        <form method="get" class="form-inline">
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 small font-weight-bold">Sales:</label>
-                <select name="userId" class="form-control form-control-sm">
-                    <option value="">- Semua -</option>
+<!-- ── Stats ── -->
+<div class="ar-stats">
+    <div class="ar-stat hadir">
+        <div class="ar-stat-icon"><i class="fas fa-user-check"></i></div>
+        <div>
+            <div class="ar-stat-val">@totalHadir</div>
+            <div class="ar-stat-label">Hadir</div>
+            <div class="ar-stat-pct">@(total > 0 ? $"{(totalHadir*100/total)}%" : "0%") dari total</div>
+        </div>
+    </div>
+    <div class="ar-stat terlambat">
+        <div class="ar-stat-icon"><i class="fas fa-clock"></i></div>
+        <div>
+            <div class="ar-stat-val">@totalTerlambat</div>
+            <div class="ar-stat-label">Terlambat</div>
+            <div class="ar-stat-pct">@(total > 0 ? $"{(totalTerlambat*100/total)}%" : "0%") dari total</div>
+        </div>
+    </div>
+    <div class="ar-stat absen">
+        <div class="ar-stat-icon"><i class="fas fa-user-times"></i></div>
+        <div>
+            <div class="ar-stat-val">@totalAbsen</div>
+            <div class="ar-stat-label">Absen</div>
+            <div class="ar-stat-pct">@(total > 0 ? $"{(totalAbsen*100/total)}%" : "0%") dari total</div>
+        </div>
+    </div>
+    <div class="ar-stat izin">
+        <div class="ar-stat-icon"><i class="fas fa-file-medical"></i></div>
+        <div>
+            <div class="ar-stat-val">@totalIzin</div>
+            <div class="ar-stat-label">Izin / Sakit</div>
+            <div class="ar-stat-pct">@(total > 0 ? $"{(totalIzin*100/total)}%" : "0%") dari total</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Filter ── -->
+<div class="ar-filter-card">
+    <div class="ar-filter-header">
+        <div class="ar-filter-header-left">
+            <i class="fas fa-sliders-h"></i> Filter Data
+        </div>
+        <small>@total rekap ditampilkan</small>
+    </div>
+    <div class="ar-filter-body">
+        <form method="get" style="display:contents;">
+            <div class="ar-fld">
+                <label>Karyawan / Sales</label>
+                <select name="userId">
+                    <option value="">— Semua Karyawan —</option>
                     @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
                     {
                         <option value="@s.Id" selected="@(ViewBag.SelectedUserId?.ToString() == s.Id.ToString() ? "selected" : null)">@s.FullName</option>
                     }
                 </select>
             </div>
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 small font-weight-bold">Dari:</label>
-                <input type="date" name="dateFrom" class="form-control form-control-sm" value="@ViewBag.SelectedDateFrom" />
+            <div class="ar-fld">
+                <label>Dari Tanggal</label>
+                <input type="date" name="dateFrom" value="@ViewBag.SelectedDateFrom" />
             </div>
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 small font-weight-bold">Sampai:</label>
-                <input type="date" name="dateTo" class="form-control form-control-sm" value="@ViewBag.SelectedDateTo" />
+            <div class="ar-fld">
+                <label>Sampai Tanggal</label>
+                <input type="date" name="dateTo" value="@ViewBag.SelectedDateTo" />
             </div>
-            <button class="btn btn-primary btn-sm mb-2"><i class="fas fa-search mr-1"></i>Tampilkan</button>
+            <div style="display:flex;gap:.5rem;align-items:flex-end;">
+                <button type="submit" class="ar-btn-search">
+                    <i class="fas fa-search mr-1"></i>Tampilkan
+                </button>
+                <a href="@Url.Action("AttendanceReport","Payroll")" class="ar-btn-reset">
+                    <i class="fas fa-undo mr-1"></i>Reset
+                </a>
+            </div>
         </form>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-sm table-hover mb-0">
-                <thead class="thead-light">
-                    <tr><th>Tanggal</th><th>Nama</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Keterangan</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var r in Model)
-                    {
-                        <tr>
-                            <td>@r.AttendanceDate.ToString("dd/MM/yyyy")</td>
-                            <td>@r.User.FullName</td>
-                            <td>@(r.CheckInAt?.ToLocalTime().ToString("HH:mm") ?? "-")</td>
-                            <td>@(r.CheckOutAt?.ToLocalTime().ToString("HH:mm") ?? "-")</td>
-                            <td>@r.Status</td>
-                            <td class="small text-muted">@(r.Notes ?? "-")</td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data.</td></tr>
-                    }
-                </tbody>
-            </table>
+<!-- ── Table ── -->
+<div class="ar-card">
+    <div class="ar-card-header">
+        <div class="ar-card-header-title">
+            <i class="fas fa-table"></i>
+            Rekap Kehadiran
+            <span class="ar-count">@Model.Count data</span>
         </div>
+        @if (!string.IsNullOrWhiteSpace(ViewBag.SelectedDateFrom?.ToString()) || !string.IsNullOrWhiteSpace(ViewBag.SelectedDateTo?.ToString()))
+        {
+            <span style="color:rgba(255,255,255,.6);font-size:.75rem;">
+                <i class="fas fa-calendar-alt mr-1"></i>
+                @(string.IsNullOrWhiteSpace(ViewBag.SelectedDateFrom?.ToString()) ? "—" : ViewBag.SelectedDateFrom)
+                &nbsp;s/d&nbsp;
+                @(string.IsNullOrWhiteSpace(ViewBag.SelectedDateTo?.ToString()) ? "—" : ViewBag.SelectedDateTo)
+            </span>
+        }
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="ar-table">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Karyawan</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Durasi</th>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="ar-empty">
+                                <i class="fas fa-calendar-times ar-empty-icon"></i>
+                                <p>Tidak ada data kehadiran untuk filter ini.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @foreach (var r in Model)
+                {
+                    var statusKey = r.Status?.ToLower() switch {
+                        "hadir"                        => "hadir",
+                        "terlambat"                    => "terlambat",
+                        "absen"                        => "absen",
+                        "izin" or "sakit" or "cuti"    => "izin",
+                        _                              => "absen"
+                    };
+                    var rowClass = "row-" + statusKey;
+
+                    // Avatar colour derived from name hash
+                    var colors = new[]{"#4e73df","#1cc88a","#36b9cc","#e74a3b","#f6c23e","#858796","#5a5c69","#2c9faf"};
+                    var avatarColor = colors[Math.Abs((r.User?.FullName ?? "?").GetHashCode()) % colors.Length];
+                    var initials = string.Join("", (r.User?.FullName ?? "?").Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString() : ""));
+
+                    // Duration
+                    string duration = "—";
+                    if (r.CheckInAt.HasValue && r.CheckOutAt.HasValue)
+                    {
+                        var span = r.CheckOutAt.Value - r.CheckInAt.Value;
+                        duration = span.TotalMinutes >= 60
+                            ? $"{(int)span.TotalHours}j {span.Minutes:00}m"
+                            : $"{(int)span.TotalMinutes}m";
+                    }
+
+                    <tr class="@rowClass">
+                        <td>
+                            <div class="ar-date-main">@r.AttendanceDate.ToString("dd MMM yyyy")</div>
+                            <div class="ar-date-sub">@r.AttendanceDate.DayOfWeek</div>
+                        </td>
+                        <td>
+                            <div class="ar-name-cell">
+                                <div class="ar-avatar" style="background:@avatarColor;">@initials</div>
+                                <span class="ar-name-text">@r.User.FullName</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (r.CheckInAt.HasValue)
+                            {
+                                <span class="ar-time-val">@r.CheckInAt.Value.ToLocalTime().ToString("HH:mm")</span>
+                            }
+                            else { <span class="ar-time-nil">—</span> }
+                        </td>
+                        <td>
+                            @if (r.CheckOutAt.HasValue)
+                            {
+                                <span class="ar-time-val">@r.CheckOutAt.Value.ToLocalTime().ToString("HH:mm")</span>
+                            }
+                            else { <span class="ar-time-nil">—</span> }
+                        </td>
+                        <td>
+                            @if (duration != "—")
+                            {
+                                <span class="ar-dur"><i class="fas fa-hourglass-half mr-1" style="font-size:.65rem;"></i>@duration</span>
+                            }
+                            else { <span class="ar-time-nil">—</span> }
+                        </td>
+                        <td>
+                            <span class="ar-status @statusKey">
+                                <span class="ar-status-dot"></span>
+                                @r.Status
+                            </span>
+                        </td>
+                        <td>
+                            <span class="ar-notes" title="@r.Notes">
+                                @(string.IsNullOrWhiteSpace(r.Notes) ? "—" : r.Notes)
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
+

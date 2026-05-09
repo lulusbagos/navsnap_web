@@ -2,114 +2,332 @@
 @{
     ViewData["Title"] = "Riwayat Kunjungan";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalVisit    = Model.Count;
+    int totalSelesai  = Model.Count(x => x.Status == "completed");
+    int totalTiba     = Model.Count(x => x.Status == "arrived");
+    int totalPoin     = Model.Sum(x => x.PointEarned);
 }
 
+@section Styles {
+<style>
+    /* ── stat cards ── */
+    .stat-card { border: none; border-radius: 12px; transition: transform .15s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card .icon-box {
+        width: 52px; height: 52px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.35rem;
+    }
+    /* ── filter card ── */
+    .filter-card {
+        border: 1px solid #dce8f4;
+        border-radius: 14px;
+        box-shadow: 0 2px 16px rgba(15,60,120,.07);
+        overflow: hidden;
+    }
+    .filter-card .card-header {
+        background: linear-gradient(135deg,#f0f6ff,#e8f2ff);
+        border-bottom: 1px solid #d0e2f4;
+        padding: .8rem 1.4rem;
+    }
+    .filter-card .card-body { background: #fafcff; padding: 1.2rem 1.4rem .4rem; }
+    /* filter group labels */
+    .filter-label {
+        display: block;
+        font-size: .7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: #5a7a99;
+        margin-bottom: .35rem;
+    }
+    /* date range group */
+    .date-range-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .date-range-group .form-control { flex: 1; }
+    .date-range-sep {
+        font-size: .72rem; font-weight: 700;
+        color: #8fa5bc; white-space: nowrap;
+        padding: 0 2px;
+    }
+    /* filter action row */
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex-wrap: wrap;
+        padding: .6rem 1.4rem 1rem;
+        border-top: 1px solid #e8f0f8;
+        background: #fafcff;
+    }
+    /* ── assign card ── */
+    .assign-card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+    .assign-card .card-header {
+        background: linear-gradient(135deg,#fff8e1,#fff3cd);
+        border-bottom: 2px solid #ffe082;
+        border-radius: 12px 12px 0 0; padding: 1rem 1.5rem;
+    }
+    /* ── table card ── */
+    .table-card { border: none; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .table-card .card-header {
+        background: linear-gradient(135deg,#1565c0,#1e88e5);
+        padding: 1rem 1.5rem;
+    }
+    /* ── table ── */
+    #historyTable { font-size: .82rem; }
+    #historyTable thead th {
+        background: #f0f4ff; color: #3a4a6b;
+        font-weight: 700; font-size: .75rem;
+        text-transform: uppercase; letter-spacing: .04em;
+        border-bottom: 2px solid #d0d9f0; padding: .75rem 1rem;
+        white-space: nowrap;
+    }
+    #historyTable tbody tr { transition: background .12s; }
+    #historyTable tbody tr:hover { background: #f5f8ff; }
+    #historyTable td { padding: .65rem 1rem; vertical-align: middle; border-color: #eef1f8; }
+    /* ── status badges ── */
+    .badge-visit {
+        font-size: .72rem; font-weight: 600;
+        padding: .3em .65em; border-radius: 6px; letter-spacing: .02em;
+    }
+    .badge-arrived  { background: #e3f2fd; color: #1565c0; }
+    .badge-completed{ background: #e8f5e9; color: #2e7d32; }
+    .badge-skipped  { background: #fce4ec; color: #c62828; }
+    .badge-pending  { background: #fff8e1; color: #e65100; }
+    /* ── point badge ── */
+    .badge-point { background: linear-gradient(135deg,#6a11cb,#2575fc); color:#fff; font-size: .72rem; padding: .3em .7em; border-radius: 20px; }
+    /* ── photo / map links ── */
+    .btn-link-sm { font-size: .78rem; padding: .2rem .5rem; border-radius: 6px; }
+    /* ── empty state ── */
+    .empty-state { padding: 4rem 2rem; }
+    .empty-state i { font-size: 3rem; color: #d0d9f0; }
+    /* ── search box inside table header ── */
+    #tableSearch { max-width: 240px; border-radius: 20px; font-size: .82rem; }
+</style>
+}
+
+<!-- ── Page heading ─────────────────────────────────────────── -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-history mr-2 text-primary"></i>Riwayat Kunjungan Sales
-    </h1>
-    <a class="btn btn-success btn-sm"
+    <div>
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+            <i class="fas fa-history mr-2 text-primary"></i>Riwayat Kunjungan Sales
+        </h1>
+        <p class="text-muted small mb-0 mt-1">Pantau dan analisis aktivitas kunjungan tim sales</p>
+    </div>
+    <a class="btn btn-success shadow-sm"
        href="@Url.Action("ExportHistory","SalesTracking", new { userId = ViewBag.SelectedUserId, date = ViewBag.SelectedDate, dateFrom = ViewBag.SelectedDateFrom, dateTo = ViewBag.SelectedDateTo })">
-        <i class="fas fa-file-excel mr-1"></i>Download Excel
+        <i class="fas fa-file-excel mr-2"></i>Export Excel
     </a>
 </div>
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3" style="background:#f8f9fc;border-bottom:2px solid #e3e6f0;">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter mr-2"></i>Filter</h6>
+<!-- ── Summary stats ─────────────────────────────────────────── -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#e8f4fd;">
+                    <i class="fas fa-route text-primary"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Total Kunjungan</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalVisit</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="get" class="form-inline">
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 font-weight-bold small">Sales:</label>
-                <select name="userId" class="form-control form-control-sm">
-                    <option value="">- Semua Sales -</option>
-                    @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
-                    {
-                        <option value="@s.Id" selected="@(ViewBag.SelectedUserId?.ToString() == s.Id.ToString() ? "selected" : null)">
-                            @s.FullName
-                        </option>
-                    }
-                </select>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#e8f5e9;">
+                    <i class="fas fa-check-circle" style="color:#2e7d32;"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Selesai</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalSelesai</div>
+                </div>
             </div>
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 font-weight-bold small">Tanggal:</label>
-                <input type="date" name="date" class="form-control form-control-sm" value="@ViewBag.SelectedDate" />
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#e3f2fd;">
+                    <i class="fas fa-map-marker-alt" style="color:#1565c0;"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Tiba</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalTiba</div>
+                </div>
             </div>
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 font-weight-bold small">Dari:</label>
-                <input type="date" name="dateFrom" class="form-control form-control-sm" value="@ViewBag.SelectedDateFrom" />
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#ede7f6;">
+                    <i class="fas fa-star" style="color:#6a11cb;"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Total Poin</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalPoin</div>
+                </div>
             </div>
-            <div class="form-group mr-3 mb-2">
-                <label class="mr-2 font-weight-bold small">Sampai:</label>
-                <input type="date" name="dateTo" class="form-control form-control-sm" value="@ViewBag.SelectedDateTo" />
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm mb-2">
-                <i class="fas fa-search mr-1"></i>Tampilkan
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 
-@if (User.IsInRole("Administrator") || User.IsInRole("Pengawas"))
-{
-    <div class="card shadow mb-4">
-        <div class="card-header py-3" style="background:#fff3cd;border-left:4px solid #f6c23e;">
-            <h6 class="m-0 font-weight-bold"><i class="fas fa-plus-circle mr-2 text-warning"></i>Tugaskan Kunjungan Baru</h6>
+<!-- ── Filter ────────────────────────────────────────────────── -->
+<div class="card filter-card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-filter text-primary mr-2"></i>
+            <span class="font-weight-bold text-primary" style="font-size:.88rem;">Filter &amp; Pencarian</span>
         </div>
+        @{
+            bool hasFilter = ViewBag.SelectedUserId != null ||
+                             !string.IsNullOrEmpty(ViewBag.SelectedDate as string) ||
+                             !string.IsNullOrEmpty(ViewBag.SelectedDateFrom as string) ||
+                             !string.IsNullOrEmpty(ViewBag.SelectedDateTo as string);
+        }
+        @if (hasFilter)
+        {
+            <span class="badge badge-primary" style="font-size:.72rem;">Filter aktif</span>
+        }
+    </div>
+    <form method="get">
         <div class="card-body">
-            <form asp-controller="SalesTracking" asp-action="AssignVisit" method="post" class="form-inline">
-                @Html.AntiForgeryToken()
-                <div class="form-group mr-3 mb-2">
-                    <label class="mr-2 font-weight-bold small">Sales:</label>
-                    <select name="userId" class="form-control form-control-sm" required>
+            <div class="row">
+                <!-- Sales -->
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <label class="filter-label"><i class="fas fa-user mr-1"></i>Sales</label>
+                    <select name="userId" class="form-control form-control-sm">
+                        <option value="">Semua Sales</option>
                         @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
                         {
-                            <option value="@s.Id">@s.FullName</option>
+                            <option value="@s.Id" selected="@(ViewBag.SelectedUserId?.ToString() == s.Id.ToString() ? "selected" : null)">
+                                @s.FullName
+                            </option>
                         }
                     </select>
                 </div>
-                <div class="form-group mr-3 mb-2">
-                    <label class="mr-2 font-weight-bold small">Checkpoint:</label>
-                    <select name="checkpointId" class="form-control form-control-sm" required id="assignCheckpointSelect">
-                        <option value="">Pilih...</option>
-                    </select>
+                <!-- Tanggal spesifik -->
+                <div class="col-md-2 col-sm-6 mb-3">
+                    <label class="filter-label"><i class="fas fa-calendar-day mr-1"></i>Tanggal Spesifik</label>
+                    <input type="date" name="date" class="form-control form-control-sm" value="@ViewBag.SelectedDate" />
+                    <div class="text-muted" style="font-size:.68rem;margin-top:.25rem;">Kosongkan jika pakai rentang</div>
                 </div>
-                <div class="form-group mr-3 mb-2">
-                    <label class="mr-2 font-weight-bold small">Tanggal:</label>
-                    <input type="date" name="visitDate" class="form-control form-control-sm"
-                           value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                <!-- Rentang tanggal -->
+                <div class="col-md-4 col-sm-8 mb-3">
+                    <label class="filter-label"><i class="fas fa-calendar-alt mr-1"></i>Rentang Tanggal</label>
+                    <div class="date-range-group">
+                        <input type="date" name="dateFrom" class="form-control form-control-sm" value="@ViewBag.SelectedDateFrom" />
+                        <span class="date-range-sep">s/d</span>
+                        <input type="date" name="dateTo" class="form-control form-control-sm" value="@ViewBag.SelectedDateTo" />
+                    </div>
+                    <div class="text-muted" style="font-size:.68rem;margin-top:.25rem;">Kosongkan jika pakai tanggal spesifik</div>
                 </div>
-                <button type="submit" class="btn btn-warning btn-sm mb-2 font-weight-bold">
-                    <i class="fas fa-user-plus mr-1"></i>Tugaskan
-                </button>
+                <!-- Cari -->
+                <div class="col-md-3 col-sm-4 mb-3">
+                    <label class="filter-label"><i class="fas fa-search mr-1"></i>Cari Tabel</label>
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-right-0">
+                                <i class="fas fa-search text-muted" style="font-size:.75rem;"></i>
+                            </span>
+                        </div>
+                        <input type="text" id="tableSearch" class="form-control border-left-0"
+                               placeholder="Nama sales, checkpoint..." style="box-shadow:none;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Action bar -->
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm px-4">
+                <i class="fas fa-filter mr-1"></i>Terapkan Filter
+            </button>
+            <a href="@Url.Action("History","SalesTracking")" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="fas fa-times mr-1"></i>Reset Filter
+            </a>
+            <span class="text-muted ml-auto" style="font-size:.75rem;">
+                <i class="fas fa-info-circle mr-1"></i>Filter server hanya berlaku untuk Sales &amp; Tanggal. Cari Tabel berjalan di browser.
+            </span>
+        </div>
+    </form>
+</div>
+
+<!-- ── Assign visit (admin/pengawas only) ────────────────────── -->
+@if (User.IsInRole("Administrator") || User.IsInRole("Pengawas"))
+{
+    <div class="card assign-card mb-4">
+        <div class="card-header d-flex align-items-center">
+            <i class="fas fa-plus-circle text-warning mr-2"></i>
+            <h6 class="m-0 font-weight-bold text-dark">Tugaskan Kunjungan Baru</h6>
+        </div>
+        <div class="card-body">
+            <form asp-controller="SalesTracking" asp-action="AssignVisit" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row align-items-end">
+                    <div class="col-md-3 mb-3">
+                        <label class="font-weight-bold small text-gray-700 mb-1">Sales</label>
+                        <select name="userId" class="form-control form-control-sm" required>
+                            @foreach (var s in (ViewBag.SalesList as List<NavSnap.Models.Entities.User> ?? new()))
+                            {
+                                <option value="@s.Id">@s.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="font-weight-bold small text-gray-700 mb-1">Checkpoint</label>
+                        <select name="checkpointId" class="form-control form-control-sm" required id="assignCheckpointSelect">
+                            <option value="">— Pilih Checkpoint —</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label class="font-weight-bold small text-gray-700 mb-1">Tanggal</label>
+                        <input type="date" name="visitDate" class="form-control form-control-sm"
+                               value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button type="submit" class="btn btn-warning btn-sm px-4 font-weight-bold shadow-sm">
+                            <i class="fas fa-user-plus mr-1"></i>Tugaskan
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
 }
 
-<div class="card shadow">
-    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-        <h6 class="m-0 font-weight-bold">
-            <i class="fas fa-table mr-2"></i>Hasil - @Model.Count kunjungan
-        </h6>
-    </div>
+<!-- ── Data table ────────────────────────────────────────────── -->
+<div class="card table-card">
+    <div class="card-header d-flex align-items-center">
+            <i class="fas fa-table mr-2 text-white"></i>
+            <h6 class="m-0 font-weight-bold text-white">
+                Data Kunjungan
+                <span class="badge badge-light text-primary ml-2">@Model.Count</span>
+            </h6>
+        </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="thead-light">
+            <table class="table mb-0" id="historyTable">
+                <thead>
                     <tr>
-                        <th>#</th>
+                        <th style="width:40px;">#</th>
                         <th>Sales</th>
                         <th>Checkpoint</th>
                         <th>Lokasi</th>
                         <th>Tanggal</th>
+                        <th>Jam Tiba</th>
                         <th>Status</th>
-                        <th>Jam Kunjung</th>
                         <th>Koordinat</th>
                         <th>Keterangan</th>
                         <th>Foto</th>
-                        <th>Poin</th>
+                        <th style="width:70px;">Poin</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,82 +335,108 @@
                     @foreach (var v in Model)
                     {
                         <tr>
-                            <td>@no++</td>
-                            <td class="small font-weight-bold">@v.User.FullName</td>
-                            <td class="small">@v.Checkpoint.CheckpointName</td>
-                            <td class="small text-muted">@(v.Checkpoint.Address ?? "-")</td>
-                            <td class="small">@v.VisitDate.ToString("dd/MM/yyyy")</td>
+                            <td class="text-muted">@no++</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center mr-2 flex-shrink-0"
+                                         style="width:30px;height:30px;background:linear-gradient(135deg,#1565c0,#42a5f5);color:#fff;font-size:.7rem;font-weight:700;">
+                                        @(v.User.FullName?.Length > 0 ? v.User.FullName[0].ToString().ToUpper() : "?")
+                                    </div>
+                                    <span class="font-weight-bold" style="font-size:.82rem;">@v.User.FullName</span>
+                                </div>
+                            </td>
+                            <td class="font-weight-600" style="font-size:.82rem;">@v.Checkpoint.CheckpointName</td>
+                            <td class="text-muted" style="font-size:.78rem;max-width:160px;white-space:normal;">@(v.Checkpoint.Address ?? "—")</td>
+                            <td style="font-size:.82rem;white-space:nowrap;">@v.VisitDate.ToString("dd MMM yyyy")</td>
+                            <td class="text-muted" style="font-size:.78rem;white-space:nowrap;">
+                                @(v.ArrivedAt.HasValue ? v.ArrivedAt.Value.ToLocalTime().ToString("HH:mm") : "—")
+                            </td>
                             <td>
                                 @switch (v.Status)
                                 {
                                     case "arrived":
-                                        <span class="badge badge-status-arrived">Tiba</span>
+                                        <span class="badge badge-visit badge-arrived"><i class="fas fa-map-marker-alt mr-1"></i>Tiba</span>
                                         break;
                                     case "completed":
-                                        <span class="badge badge-status-completed">Selesai</span>
+                                        <span class="badge badge-visit badge-completed"><i class="fas fa-check mr-1"></i>Selesai</span>
                                         break;
                                     case "skipped":
-                                        <span class="badge badge-status-skipped">Dilewati</span>
+                                        <span class="badge badge-visit badge-skipped"><i class="fas fa-times mr-1"></i>Dilewati</span>
                                         break;
                                     default:
-                                        <span class="badge badge-status-pending">Pending</span>
+                                        <span class="badge badge-visit badge-pending"><i class="fas fa-clock mr-1"></i>Pending</span>
                                         break;
                                 }
                             </td>
-                            <td class="small text-muted">@(v.ArrivedAt.HasValue ? v.ArrivedAt.Value.ToLocalTime().ToString("dd/MM HH:mm") : "-")</td>
-                            <td class="small">
+                            <td>
                                 @if (v.LatitudeArrived.HasValue)
                                 {
-                                    <a href="https://www.google.com/maps?q=@v.LatitudeArrived,@v.LongitudeArrived" target="_blank" class="text-primary">
-                                        @v.LatitudeArrived?.ToString("F4"), @v.LongitudeArrived?.ToString("F4")
+                                    <a href="https://www.google.com/maps?q=@v.LatitudeArrived,@v.LongitudeArrived"
+                                       target="_blank" rel="noopener noreferrer"
+                                       class="btn btn-outline-primary btn-link-sm">
+                                        <i class="fas fa-map-pin mr-1"></i>Maps
                                     </a>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">-</span>
+                                    <span class="text-muted">—</span>
                                 }
                             </td>
-                            <td class="small text-muted">@(v.Notes ?? "-")</td>
-                            <td class="small">
+                            <td class="text-muted" style="font-size:.78rem;max-width:160px;white-space:normal;">@(v.Notes ?? "—")</td>
+                            <td>
                                 @if (!string.IsNullOrWhiteSpace(v.VisitPhotoPath))
                                 {
-                                    <a href="@v.VisitPhotoPath" target="_blank" class="text-primary">
-                                        <i class="fas fa-image mr-1"></i>Lihat
+                                    <a href="@v.VisitPhotoPath" target="_blank" rel="noopener noreferrer"
+                                       class="btn btn-outline-info btn-link-sm">
+                                        <i class="fas fa-image mr-1"></i>Foto
                                     </a>
                                 }
                                 else
                                 {
-                                    <span class="text-muted">-</span>
+                                    <span class="text-muted">—</span>
                                 }
                             </td>
-                            <td><span class="badge badge-info">@v.PointEarned</span></td>
-                        </tr>
-                    }
-                    @if (!Model.Any())
-                    {
-                        <tr>
-                            <td colspan="11" class="text-center text-muted py-4">Tidak ada data kunjungan</td>
+                            <td class="text-center">
+                                <span class="badge-point">@v.PointEarned</span>
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
+            @if (!Model.Any())
+            {
+                <div class="empty-state text-center">
+                    <i class="fas fa-inbox d-block mb-3"></i>
+                    <p class="text-muted font-weight-bold mb-1">Tidak ada data kunjungan</p>
+                    <p class="text-muted small">Sesuaikan filter untuk melihat data yang tersedia.</p>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
+    // Populate checkpoint dropdown
     fetch('/Checkpoint/GetAllJson')
         .then(r => r.json())
         .then(data => {
-            var sel = document.getElementById('assignCheckpointSelect');
+            const sel = document.getElementById('assignCheckpointSelect');
             if (!sel) return;
-            data.forEach(function(cp) {
-                var opt = document.createElement('option');
+            data.forEach(cp => {
+                const opt = document.createElement('option');
                 opt.value = cp.id;
-                opt.text = cp.checkpointName;
+                opt.text  = cp.checkpointName;
                 sel.appendChild(opt);
             });
         });
+
+    // Client-side table search
+    document.getElementById('tableSearch')?.addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#historyTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
 </script>
 }

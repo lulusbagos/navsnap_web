@@ -3,6 +3,23 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@section Styles {
+<style>
+    #mapAll {
+        height: calc(100vh - 220px);
+        min-height: 680px;
+        border-radius: 0 0 10px 10px;
+    }
+
+    @@media (max-width: 991.98px) {
+        #mapAll {
+            height: calc(100vh - 240px);
+            min-height: 540px;
+        }
+    }
+</style>
+}
+
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
         <i class="fas fa-map mr-2 text-primary"></i>Peta Semua Checkpoint
@@ -19,7 +36,7 @@
         <span class="badge badge-light" id="cpCount">Memuat...</span>
     </div>
     <div class="card-body p-0">
-        <div id="mapAll" style="height:550px;border-radius:0 0 10px 10px;"></div>
+        <div id="mapAll"></div>
     </div>
 </div>
 

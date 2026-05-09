@@ -4,58 +4,268 @@
     ViewData["Title"] = isEdit ? "Edit Role" : "Tambah Role";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<script>document.body.classList.add('pf-page');</script>
 
-<div class="pf-page-header">
-    <div class="pf-page-header-left">
-        <div class="pf-page-ico"><i class="fas fa-user-shield"></i></div>
+<style>
+/* ── Page header ──────────────────────────── */
+.rf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: rfFade .4s ease both;
+}
+.rf-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.rf-header-left span { font-size: .8rem; color: #718096; }
+
+.rf-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem 1rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    background: #f0f4ff;
+    color: #4e73df;
+    border: 1px solid #d0d9ff;
+    text-decoration: none;
+    transition: background .15s;
+}
+.rf-btn-back:hover { background: #e2e8ff; color: #4e73df; text-decoration: none; }
+
+/* ── Card ─────────────────────────────────── */
+.rf-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: rfFade .45s ease .05s both;
+}
+.rf-card-header {
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #1a3a6e, #2d6bc4);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+.rf-card-header-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem;
+    flex-shrink: 0;
+}
+.rf-card-header h6 {
+    margin: 0;
+    font-size: .92rem;
+    font-weight: 700;
+}
+.rf-card-header small { color: rgba(255,255,255,.65); font-size: .75rem; }
+
+.rf-card-body { padding: 1.75rem 1.5rem; }
+
+/* ── Form fields ──────────────────────────── */
+.rf-field { margin-bottom: 1.25rem; }
+.rf-label {
+    display: block;
+    font-size: .73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #5a6a82;
+    margin-bottom: .45rem;
+}
+.rf-required { color: #e74a3b; margin-left: 2px; }
+
+.rf-input,
+.rf-textarea {
+    width: 100%;
+    display: block;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    padding: .6rem .9rem;
+    font-size: .875rem;
+    color: #2d3748;
+    background: #fff;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+    font-family: inherit;
+}
+.rf-input:focus,
+.rf-textarea:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 3px rgba(78,115,223,.12);
+}
+.rf-input::placeholder,
+.rf-textarea::placeholder { color: #c0ccd8; }
+.rf-textarea { resize: vertical; min-height: 90px; }
+
+.rf-val-err {
+    display: block;
+    margin-top: .35rem;
+    font-size: .75rem;
+    color: #e74a3b;
+}
+
+/* ── Toggle switch ───────────────────────── */
+.rf-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    background: #f8f9fc;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+}
+.rf-toggle-lbl-main {
+    font-size: .85rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+.rf-toggle-lbl-sub { font-size: .75rem; color: #a0aec0; }
+.rf-toggle-wrap { margin-left: auto; }
+
+.rf-switch-input { position: absolute; width:0; height:0; opacity:0; pointer-events:none; }
+.rf-switch-track {
+    position: relative;
+    display: block;
+    width: 44px; height: 24px;
+    background: #d1d5db;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s;
+}
+.rf-switch-input:checked + .rf-switch-track { background: #4e73df; }
+.rf-switch-track::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 18px; height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.rf-switch-input:checked + .rf-switch-track::after { transform: translateX(20px); }
+
+/* ── Divider ─────────────────────────────── */
+.rf-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 1.25rem 0;
+}
+
+/* ── Submit ──────────────────────────────── */
+.rf-submit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .7rem 1.25rem;
+    border-radius: 9px;
+    border: none;
+    font-size: .88rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+    font-family: inherit;
+}
+.rf-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(78,115,223,.45);
+}
+
+/* ── Animation ───────────────────────────── */
+@@keyframes rfFade {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="rf-header">
+    <div class="rf-header-left">
+        <h2>
+            <i class="fas fa-user-shield mr-2" style="color:#4e73df;"></i>
+            @ViewData["Title"]
+        </h2>
+        <span>@(isEdit ? "Perbarui informasi role" : "Buat role baru untuk mengelola hak akses")</span>
+    </div>
+    <a asp-action="Index" class="rf-btn-back">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
+</div>
+
+<!-- Form card -->
+<div class="rf-card">
+    <div class="rf-card-header">
+        <div class="rf-card-header-icon">
+            <i class="fas fa-@(isEdit ? "pen" : "plus")"></i>
+        </div>
         <div>
-            <p class="pf-page-title">@ViewData["Title"]</p>
-            <p class="pf-page-sub">@(isEdit ? "Perbarui informasi role" : "Buat role baru untuk mengelola hak akses")</p>
+            <h6>@(isEdit ? "Edit Role" : "Form Tambah Role")</h6>
+            <small>@(isEdit ? "Perbarui nama, deskripsi, dan status" : "Isi data untuk membuat role baru")</small>
         </div>
     </div>
-    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
-</div>
+    <div class="rf-card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
 
-<div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="prem-card">
-            <div class="prem-card-head">
-                <div class="prem-card-head-ico"><i class="fas fa-edit"></i></div>
-                <h6>Form Role</h6>
+            <div class="rf-field">
+                <label class="rf-label">Nama Role <span class="rf-required">*</span></label>
+                <input asp-for="RoleName" class="rf-input" placeholder="Contoh: Supervisor" autocomplete="off" />
+                <span asp-validation-for="RoleName" class="rf-val-err"></span>
             </div>
-            <div class="prem-card-body">
-                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
-                    @Html.AntiForgeryToken()
-                    @Html.HiddenFor(m => m.Id)
 
-                    <div class="pf">
-                        <label>Nama Role</label>
-                        <input asp-for="RoleName" placeholder="Contoh: Supervisor" />
-                        <span asp-validation-for="RoleName" class="val-err"></span>
-                    </div>
-
-                    <div class="pf">
-                        <label>Deskripsi</label>
-                        <textarea asp-for="Description" rows="3" placeholder="Deskripsi singkat tentang role ini (opsional)"></textarea>
-                    </div>
-
-                    <div class="pf-div"></div>
-
-                    <div class="pf">
-                        <label class="pf-lbl">Status</label>
-                        <div class="prem-toggle">
-                            <input asp-for="IsActive" type="checkbox" class="prem-toggle-input" id="isActive" />
-                            <label for="isActive" class="prem-toggle-track"><span class="prem-toggle-thumb"></span></label>
-                            <span class="prem-toggle-lbl">Role Aktif</span>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="prem-submit">
-                        <i class="fas fa-save"></i>Simpan Role
-                    </button>
-                </form>
+            <div class="rf-field">
+                <label class="rf-label">Deskripsi</label>
+                <textarea asp-for="Description" class="rf-textarea"
+                          placeholder="Deskripsi singkat tentang role ini (opsional)"></textarea>
             </div>
-        </div>
+
+            <div class="rf-divider"></div>
+
+            <div class="rf-field">
+                <label class="rf-label">Status Role</label>
+                <div class="rf-toggle-row">
+                    <div>
+                        <div class="rf-toggle-lbl-main">Role Aktif</div>
+                        <div class="rf-toggle-lbl-sub">Role aktif dapat digunakan saat assign ke user</div>
+                    </div>
+                    <div class="rf-toggle-wrap">
+                        <input asp-for="IsActive" type="checkbox" class="rf-switch-input" id="rfIsActive" />
+                        <label for="rfIsActive" class="rf-switch-track"></label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="rf-submit">
+                <i class="fas fa-save"></i>
+                @(isEdit ? "Simpan Perubahan" : "Buat Role")
+            </button>
+        </form>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
+

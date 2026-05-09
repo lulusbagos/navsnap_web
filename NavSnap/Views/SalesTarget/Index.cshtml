@@ -2,133 +2,584 @@
 @{
     ViewData["Title"] = "Target Harian Sales";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalTargets  = Model.Targets.Count;
+    int totalSales    = Model.SalesList.Count;
+    int totalAktif    = Model.SalesList.Count(s => s.IsActive);
+    int uniqueSalesTgt = Model.Targets.Select(t => t.UserId).Distinct().Count();
 }
-<script>document.body.classList.add('pf-page');</script>
 
-<div class="pf-page-header">
-    <div class="pf-page-header-left">
-        <div class="pf-page-ico"><i class="fas fa-bullseye"></i></div>
-        <div>
-            <p class="pf-page-title">Pengaturan Target Harian Sales</p>
-            <p class="pf-page-sub">Set target toko per hari untuk beberapa sales sekaligus.</p>
-        </div>
+<style>
+/* ── Header ──────────────────────────────── */
+.st-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: stFade .4s ease both;
+}
+.st-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.st-header-left span { font-size: .8rem; color: #718096; }
+
+/* ── Stats ───────────────────────────────── */
+.st-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@@media (max-width: 900px) { .st-stats { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 520px)  { .st-stats { grid-template-columns: 1fr; } }
+
+.st-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    border-left: 4px solid var(--sc);
+    animation: stFadeUp .45s ease both;
+}
+.st-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.st-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.10s }
+.st-stat:nth-child(3){ --sc:#36b9cc; animation-delay:.15s }
+.st-stat:nth-child(4){ --sc:#f6c23e; animation-delay:.20s }
+.st-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--sc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sc); font-size: 1rem; flex-shrink: 0;
+}
+.st-stat-val { font-size: 1.5rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+.st-stat-lbl { font-size: .73rem; color: #718096; margin-top: 2px; }
+
+/* ── Two-col layout ──────────────────────── */
+.st-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+@@media (max-width: 1050px) { .st-layout { grid-template-columns: 1fr; } }
+
+/* ── Card shared ─────────────────────────── */
+.st-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    animation: stFadeUp .5s ease .2s both;
+}
+.st-card-header {
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a3a6e, #2d6bc4);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+.st-card-header-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem;
+    flex-shrink: 0;
+}
+.st-card-header h6 {
+    margin: 0;
+    font-size: .9rem;
+    font-weight: 700;
+}
+.st-card-header small { color: rgba(255,255,255,.6); font-size: .72rem; }
+.st-card-body { padding: 1.25rem; }
+
+/* ── Form fields ─────────────────────────── */
+.st-field { margin-bottom: 1rem; }
+.st-label {
+    display: block;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #5a6a82;
+    margin-bottom: .4rem;
+}
+.st-required { color: #e74a3b; margin-left: 2px; }
+
+.st-input,
+.st-number {
+    width: 100%;
+    display: block;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    padding: .55rem .85rem;
+    font-size: .85rem;
+    color: #2d3748;
+    background: #fff;
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+    font-family: inherit;
+}
+.st-input:focus, .st-number:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 3px rgba(78,115,223,.12);
+}
+.st-input::placeholder { color: #c0ccd8; }
+.st-hint { display: block; margin-top: .3rem; font-size: .72rem; color: #a0aec0; }
+.st-val-err { display: block; margin-top: .3rem; font-size: .73rem; color: #e74a3b; }
+
+/* ── Date row ────────────────────────────── */
+.st-date-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: .5rem;
+    align-items: end;
+}
+.st-date-sep {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #a0aec0;
+    padding-bottom: .65rem;
+    text-align: center;
+}
+
+/* ── Sales checkbox list ─────────────────── */
+.st-sales-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 9px;
+    padding: .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+.st-sales-list::-webkit-scrollbar { width: 5px; }
+.st-sales-list::-webkit-scrollbar-track { background: #f0f2f8; border-radius: 4px; }
+.st-sales-list::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 4px; }
+
+.st-check-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .45rem .7rem;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .15s;
+    user-select: none;
+}
+.st-check-item:hover { background: #f5f7ff; }
+.st-check-item.selected { background: #eef2ff; }
+
+.st-check-box {
+    width: 17px; height: 17px;
+    border-radius: 5px;
+    border: 1.5px solid #d1d5db;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s, border .15s;
+}
+.st-check-item.selected .st-check-box { background: #4e73df; border-color: #4e73df; }
+.st-check-box i { color: #fff; font-size: .55rem; display: none; }
+.st-check-item.selected .st-check-box i { display: block; }
+
+.st-check-real { position: absolute; width:0; height:0; opacity:0; pointer-events:none; }
+.st-check-name { font-size: .83rem; font-weight: 500; color: #2d3748; }
+.st-inactive-badge {
+    font-size: .68rem;
+    font-weight: 700;
+    padding: .1rem .4rem;
+    border-radius: 20px;
+    background: #e2e3e5;
+    color: #565e64;
+}
+
+/* ── Divider ─────────────────────────────── */
+.st-divider { height: 1px; background: #e2e8f0; margin: 1rem 0; }
+
+/* ── Submit ──────────────────────────────── */
+.st-submit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .65rem 1.25rem;
+    border-radius: 9px;
+    border: none;
+    font-size: .88rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+    font-family: inherit;
+}
+.st-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(78,115,223,.45); }
+
+/* ── Table ───────────────────────────────── */
+.st-table-scroll { overflow-x: auto; }
+.st-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+.st-table thead th {
+    padding: .65rem 1rem;
+    background: #f8f9fc;
+    color: #5a5c69;
+    font-weight: 700;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #e3e6f0;
+    white-space: nowrap;
+}
+.st-table tbody tr { border-bottom: 1px solid #f0f2f8; transition: background .15s; }
+.st-table tbody tr:last-child { border-bottom: none; }
+.st-table tbody tr:hover { background: #f8f9ff; }
+.st-table td { padding: .65rem 1rem; vertical-align: middle; color: #3d4a5c; }
+
+/* ── Table chips ─────────────────────────── */
+.st-date-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+.st-date-chip small { color: #a0aec0; font-size: .7rem; font-weight: 400; }
+.st-target-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    border-radius: 20px;
+    font-size: .75rem;
+    font-weight: 700;
+    background: #eef2ff;
+    color: #4e73df;
+}
+.st-sales-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+.st-notes-cell { font-size: .77rem; color: #718096; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Table search ────────────────────────── */
+.st-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a3a6e, #2d6bc4);
+    color: #fff;
+}
+.st-table-title { display: flex; align-items: center; gap: .5rem; font-size: .9rem; font-weight: 700; }
+.st-count-badge { background: rgba(255,255,255,.18); border-radius: 20px; padding: .15rem .55rem; font-size: .75rem; font-weight: 600; }
+.st-search-wrap { position: relative; flex-shrink: 0; }
+.st-search-wrap i { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,.6); font-size: .8rem; pointer-events: none; }
+.st-search {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 8px;
+    padding: .38rem .75rem .38rem 2rem;
+    font-size: .78rem;
+    color: #fff;
+    width: 180px;
+    outline: none;
+    transition: background .2s, border .2s;
+}
+.st-search::placeholder { color: rgba(255,255,255,.5); }
+.st-search:focus { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+
+/* ── Delete btn ──────────────────────────── */
+.st-btn-del {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer;
+    font-size: .73rem;
+    background: #f8d7da; color: #842029;
+    transition: transform .15s, box-shadow .15s;
+}
+.st-btn-del:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+
+/* ── Hidden ──────────────────────────────── */
+.st-hidden { display: none !important; }
+
+/* ── Empty ───────────────────────────────── */
+.st-empty { text-align: center; padding: 3rem 1rem; color: #a0aec0; }
+.st-empty i { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
+
+/* ── Alert ───────────────────────────────── */
+.st-alert-err {
+    background: #fde8e8; border: 1px solid #f5c6cb;
+    border-radius: 9px; padding: .75rem 1rem;
+    font-size: .82rem; color: #842029;
+    margin-bottom: 1rem;
+    display: none;
+}
+.st-alert-err:not(:empty) { display: block; }
+
+/* ── Animations ──────────────────────────── */
+@@keyframes stFade {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@@keyframes stFadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="st-header">
+    <div class="st-header-left">
+        <h2><i class="fas fa-bullseye mr-2" style="color:#4e73df;"></i>Target Harian Sales</h2>
+        <span>Set target kunjungan toko per hari untuk sales dalam satu rentang tanggal</span>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-5 mb-4">
-        <div class="prem-card">
-            <div class="prem-card-head">
-                <div class="prem-card-head-ico"><i class="fas fa-sliders-h"></i></div>
+<!-- Stats -->
+<div class="st-stats">
+    <div class="st-stat">
+        <div class="st-stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div><div class="st-stat-val">@totalTargets</div><div class="st-stat-lbl">Total Target Tersimpan</div></div>
+    </div>
+    <div class="st-stat">
+        <div class="st-stat-icon"><i class="fas fa-users"></i></div>
+        <div><div class="st-stat-val">@uniqueSalesTgt</div><div class="st-stat-lbl">Sales Punya Target</div></div>
+    </div>
+    <div class="st-stat">
+        <div class="st-stat-icon"><i class="fas fa-user-tie"></i></div>
+        <div><div class="st-stat-val">@totalSales</div><div class="st-stat-lbl">Total Sales</div></div>
+    </div>
+    <div class="st-stat">
+        <div class="st-stat-icon"><i class="fas fa-user-check"></i></div>
+        <div><div class="st-stat-val">@totalAktif</div><div class="st-stat-lbl">Sales Aktif</div></div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+         style="border-radius:10px;font-size:.84rem;border:none;background:#d4edda;">
+        <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Two-col layout -->
+<div class="st-layout">
+    <!-- Left: Form -->
+    <div class="st-card">
+        <div class="st-card-header">
+            <div class="st-card-header-icon"><i class="fas fa-sliders-h"></i></div>
+            <div>
                 <h6>Set Target Batch</h6>
+                <small>Terapkan target ke beberapa sales sekaligus</small>
             </div>
-            <div class="prem-card-body">
-                <form asp-action="SaveBatch" method="post">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" style="background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.3);border-radius:10px;padding:10px 14px;font-size:.82rem;color:#ef5350;margin-bottom:16px;"></div>
+        </div>
+        <div class="st-card-body">
+            <form asp-action="SaveBatch" method="post" id="stForm">
+                @Html.AntiForgeryToken()
 
-                    <div class="pf">
-                        <label class="pf-lbl">Pilih Sales</label>
-                        <div class="prem-checks" style="max-height:220px;overflow-y:auto;">
-                            @foreach (var s in Model.SalesList)
-                            {
-                                var checkedVal = Model.Form.SelectedSalesIds.Contains(s.UserId);
-                                <div class="prem-check">
-                                    <input type="checkbox" id="sales_@s.UserId" name="SelectedSalesIds" value="@s.UserId" @(checkedVal ? "checked" : "") />
-                                    <label for="sales_@s.UserId">
-                                        <span class="prem-check-box"></span>
-                                        <span>@s.FullName</span>
-                                        @if (!s.IsActive)
-                                        {
-                                            <span class="rbadge rbadge-other ml-1">Nonaktif</span>
-                                        }
-                                    </label>
-                                </div>
-                            }
+                <div asp-validation-summary="ModelOnly" class="st-alert-err"></div>
+
+                <!-- Sales checkboxes -->
+                <div class="st-field">
+                    <label class="st-label">Pilih Sales <span class="st-required">*</span></label>
+                    <div class="st-sales-list" id="stSalesList">
+                        @foreach (var s in Model.SalesList)
+                        {
+                            var sel = Model.Form.SelectedSalesIds.Contains(s.UserId);
+                            <label class="st-check-item @(sel ? "selected" : "")" id="stItem_@s.UserId">
+                                <input type="checkbox" class="st-check-real st-sales-cb"
+                                       name="SelectedSalesIds" value="@s.UserId" @(sel ? "checked" : "") />
+                                <div class="st-check-box"><i class="fas fa-check"></i></div>
+                                <span class="st-check-name">@s.FullName</span>
+                                @if (!s.IsActive)
+                                {
+                                    <span class="st-inactive-badge">Nonaktif</span>
+                                }
+                            </label>
+                        }
+                    </div>
+                    <span asp-validation-for="Form.SelectedSalesIds" class="st-val-err"></span>
+                </div>
+
+                <div class="st-divider"></div>
+
+                <!-- Date range -->
+                <div class="st-field">
+                    <label class="st-label">Rentang Tanggal <span class="st-required">*</span></label>
+                    <div class="st-date-row">
+                        <div>
+                            <input asp-for="Form.StartDate" type="date" class="st-input" />
+                            <span asp-validation-for="Form.StartDate" class="st-val-err"></span>
+                        </div>
+                        <div class="st-date-sep">s/d</div>
+                        <div>
+                            <input asp-for="Form.EndDate" type="date" class="st-input" />
+                            <span asp-validation-for="Form.EndDate" class="st-val-err"></span>
                         </div>
                     </div>
+                    <span class="st-hint">Maksimal 31 hari per batch</span>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="pf">
-                                <label asp-for="Form.StartDate"></label>
-                                <input asp-for="Form.StartDate" type="date" />
-                                <span asp-validation-for="Form.StartDate" class="val-err"></span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="pf">
-                                <label asp-for="Form.EndDate"></label>
-                                <input asp-for="Form.EndDate" type="date" />
-                                <span asp-validation-for="Form.EndDate" class="val-err"></span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Target stores -->
+                <div class="st-field">
+                    <label class="st-label">Target Toko / Hari <span class="st-required">*</span></label>
+                    <input asp-for="Form.TargetStores" type="number" min="1" max="200" class="st-number" />
+                    <span asp-validation-for="Form.TargetStores" class="st-val-err"></span>
+                    <span class="st-hint">Target yang sama diterapkan ke semua hari dalam rentang</span>
+                </div>
 
-                    <div class="pf">
-                        <label asp-for="Form.TargetStores"></label>
-                        <input asp-for="Form.TargetStores" type="number" min="1" />
-                        <span asp-validation-for="Form.TargetStores" class="val-err"></span>
-                        <span class="f-hint">Target yang sama diterapkan ke semua tanggal dalam rentang.</span>
-                    </div>
+                <!-- Notes -->
+                <div class="st-field">
+                    <label class="st-label">Catatan</label>
+                    <input asp-for="Form.Notes" class="st-input" placeholder="Contoh: Fokus area timur (opsional)" />
+                    <span asp-validation-for="Form.Notes" class="st-val-err"></span>
+                </div>
 
-                    <div class="pf">
-                        <label asp-for="Form.Notes"></label>
-                        <input asp-for="Form.Notes" placeholder="Contoh: Fokus area timur" />
-                        <span asp-validation-for="Form.Notes" class="val-err"></span>
-                    </div>
-
-                    <button type="submit" class="prem-submit">
-                        <i class="fas fa-save"></i>Simpan Target Batch
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="st-submit">
+                    <i class="fas fa-save"></i>Simpan Target Batch
+                </button>
+            </form>
         </div>
     </div>
 
-    <div class="col-lg-7 mb-4">
-        <div class="prem-card">
-            <div class="prem-card-head">
-                <div class="prem-card-head-ico"><i class="fas fa-calendar-check"></i></div>
-                <h6>Daftar Target (H-2 s/d H+21)</h6>
+    <!-- Right: Table -->
+    <div class="st-card">
+        <div class="st-table-header">
+            <div class="st-table-title">
+                <i class="fas fa-calendar-alt"></i>
+                Daftar Target (H-2 s/d H+21)
+                <span class="st-count-badge" id="stCountBadge">@totalTargets</span>
             </div>
-            <div class="prem-card-body" style="padding:0;">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Sales</th>
-                                <th>Target</th>
-                                <th>Catatan</th>
-                                <th width="70">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @if (!Model.Targets.Any())
-                        {
-                            <tr><td colspan="5" class="text-center text-muted py-4">Belum ada target tersimpan.</td></tr>
-                        }
-                        @foreach (var t in Model.Targets)
-                        {
-                            <tr>
-                                <td class="small">@t.TargetDate.ToString("dd MMM yyyy")</td>
-                                <td>@t.SalesName</td>
-                                <td><span class="badge badge-info">@t.TargetStores toko</span></td>
-                                <td class="small text-muted">@(string.IsNullOrWhiteSpace(t.Notes) ? "-" : t.Notes)</td>
-                                <td>
-                                    <form asp-action="Delete" asp-route-id="@t.Id" method="post" class="d-inline"
-                                          onsubmit="return confirm('Hapus target @t.SalesName pada @t.TargetDate.ToString("dd/MM/yyyy")?')">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
-                </div>
+            <div class="st-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="st-search" id="stSearch" placeholder="Cari sales, tanggal…" />
             </div>
+        </div>
+        <div class="st-table-scroll">
+            <table class="st-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Sales</th>
+                        <th>Target</th>
+                        <th>Catatan</th>
+                        <th style="width:50px">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="stTbody">
+                    @if (!Model.Targets.Any())
+                    {
+                        <tr id="stEmptyRow">
+                            <td colspan="5">
+                                <div class="st-empty">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p style="font-size:.84rem;">Belum ada target tersimpan.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var t in Model.Targets)
+                    {
+                        <tr>
+                            <td>
+                                <div class="st-date-chip">
+                                    <i class="fas fa-calendar" style="color:#4e73df;font-size:.72rem;"></i>
+                                    @t.TargetDate.ToString("dd MMM yyyy")
+                                </div>
+                            </td>
+                            <td>
+                                <span class="st-sales-chip">
+                                    <i class="fas fa-user-tie" style="color:#1cc88a;font-size:.72rem;"></i>
+                                    @t.SalesName
+                                </span>
+                            </td>
+                            <td>
+                                <span class="st-target-chip">
+                                    <i class="fas fa-store" style="font-size:.7rem;"></i>@t.TargetStores toko
+                                </span>
+                            </td>
+                            <td>
+                                <span class="st-notes-cell" title="@t.Notes">
+                                    @(string.IsNullOrWhiteSpace(t.Notes) ? "—" : t.Notes)
+                                </span>
+                            </td>
+                            <td>
+                                @{ var delConfirm = $"Hapus target {t.SalesName} pada {t.TargetDate:dd/MM/yyyy}?"; }
+                                <form asp-action="Delete" asp-route-id="@t.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('@Html.Raw(delConfirm)')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="st-btn-del" title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+// Toggle sales checkbox visual
+document.querySelectorAll('.st-sales-cb').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+        var label = document.getElementById('stItem_' + this.value);
+        if (label) label.classList.toggle('selected', this.checked);
+    });
+});
+
+// Table search
+(function () {
+    var input = document.getElementById('stSearch');
+    var tbody = document.getElementById('stTbody');
+    var badge = document.getElementById('stCountBadge');
+    if (!input) return;
+    input.addEventListener('input', function () {
+        var q = this.value.trim().toLowerCase();
+        var v = 0;
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            if (row.id === 'stEmptyRow') return;
+            var show = !q || row.textContent.toLowerCase().includes(q);
+            row.classList.toggle('st-hidden', !show);
+            if (show) v++;
+        });
+        badge.textContent = v;
+    });
+})();
+</script>
+}
+

@@ -147,6 +147,79 @@ namespace NavSnap.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> GetSalesTraces()
+        {
+            var cutoff = DateTime.UtcNow.AddHours(-2);
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            var logs = await _db.GpsLogs
+                .Include(g => g.User)
+                .Where(g => g.LoggedAt >= cutoff)
+                .OrderByDescending(g => g.LoggedAt)
+                .ToListAsync();
+
+            var grouped = logs
+                .GroupBy(g => g.UserId)
+                .Select(g => new
+                {
+                    UserId = g.Key,
+                    FullName = g.First().User.FullName,
+                    Points = g.OrderBy(x => x.LoggedAt)
+                        .TakeLast(8)
+                        .Select(x => new
+                        {
+                            latitude = x.Latitude,
+                            longitude = x.Longitude,
+                            loggedAt = x.LoggedAt
+                        }).ToList()
+                })
+                .ToList();
+
+            var userIds = grouped.Select(x => x.UserId).ToList();
+            var activeVisits = await _db.SalesVisits
+                .Include(v => v.Checkpoint)
+                .Where(v => userIds.Contains(v.UserId) &&
+                            v.VisitDate == today &&
+                            (v.Status == "pending" || v.Status == "arrived"))
+                .GroupBy(v => v.UserId)
+                .Select(v => v.OrderBy(x => x.Status == "arrived" ? 1 : 0).ThenBy(x => x.CreatedAt).First())
+                .ToListAsync();
+
+            var visitMap = activeVisits.ToDictionary(v => v.UserId, v => v);
+
+            var result = grouped.Select(g =>
+            {
+                visitMap.TryGetValue(g.UserId, out var visit);
+                var lastPoint = g.Points.LastOrDefault();
+                double? metersToTarget = null;
+                if (visit?.Checkpoint != null && lastPoint != null)
+                {
+                    metersToTarget = HaversineMeters(
+                        lastPoint.latitude, lastPoint.longitude,
+                        visit.Checkpoint.Latitude, visit.Checkpoint.Longitude);
+                }
+
+                return new
+                {
+                    userId = g.UserId,
+                    fullName = g.FullName,
+                    route = g.Points,
+                    target = visit == null ? null : new
+                    {
+                        checkpointId = visit.CheckpointId,
+                        checkpointName = visit.Checkpoint.CheckpointName,
+                        latitude = visit.Checkpoint.Latitude,
+                        longitude = visit.Checkpoint.Longitude,
+                        status = visit.Status,
+                        metersToTarget
+                    }
+                };
+            }).ToList();
+
+            return Json(result);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> GetCheckpointStatuses(string? date)
         {
             DateOnly filterDate = string.IsNullOrEmpty(date)

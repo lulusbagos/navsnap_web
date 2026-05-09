@@ -6,6 +6,71 @@
 
 @section Styles {
 <style>
+    /* ════════════════════════════════════════════════════════
+       FUTURISTIC ANIMATIONS (light theme preserved)
+    ════════════════════════════════════════════════════════ */
+
+    /* entrance animation */
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(22px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@keyframes fadeIn {
+        from { opacity: 0; } to { opacity: 1; }
+    }
+    /* shimmer sweep */
+    @@keyframes shimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+    }
+    /* pulse glow ring */
+    @@keyframes pulseRing {
+        0%   { transform: scale(1); opacity: .7; }
+        100% { transform: scale(1.55); opacity: 0; }
+    }
+    /* scanning line */
+    @@keyframes scanLine {
+        0%   { top: 0; }
+        100% { top: 100%; }
+    }
+    /* orbit spin */
+    @@keyframes orbitSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+    /* hero grid float */
+    @@keyframes heroFloat {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-5px); }
+    }
+    /* bar fill */
+    @@keyframes barFill {
+        from { width: 0 !important; }
+    }
+    /* counter pop */
+    @@keyframes countPop {
+        0%   { transform: scale(.7); opacity: 0; }
+        70%  { transform: scale(1.08); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    /* glitch flicker */
+    @@keyframes glitch {
+        0%, 90%, 100% { clip-path: none; transform: none; }
+        92%  { clip-path: inset(30% 0 40% 0); transform: translate(-2px); }
+        94%  { clip-path: inset(60% 0 10% 0); transform: translate(2px); }
+        96%  { clip-path: inset(10% 0 70% 0); transform: translate(-1px); }
+    }
+    /* stagger classes */
+    .anim-1 { animation: slideUp .5s ease both; }
+    .anim-2 { animation: slideUp .5s .08s ease both; }
+    .anim-3 { animation: slideUp .5s .16s ease both; }
+    .anim-4 { animation: slideUp .5s .24s ease both; }
+    .anim-5 { animation: slideUp .5s .32s ease both; }
+    .anim-6 { animation: slideUp .5s .40s ease both; }
+    .anim-7 { animation: slideUp .5s .48s ease both; }
+    .anim-8 { animation: slideUp .5s .56s ease both; }
+
+    /* ── shell ── */
     .dash-shell {
         --dash-indigo: #1f4ed8;
         --dash-cyan: #0ea5e9;
@@ -22,49 +87,125 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1.15rem 1.2rem;
-        border: 1px solid rgba(31, 78, 216, .2);
-        border-radius: 12px;
+        padding: 1.4rem 1.5rem;
+        border: 1px solid rgba(31,78,216,.18);
+        border-radius: 16px;
         background:
-            radial-gradient(circle at 78% 10%, rgba(12,198,255,.24), transparent 26rem),
-            radial-gradient(circle at 20% 100%, rgba(63,94,251,.18), transparent 23rem),
-            linear-gradient(120deg, rgba(255,255,255,.98), rgba(239,246,255,.98));
-        box-shadow: 0 20px 36px rgba(23, 35, 49, .13);
+            radial-gradient(circle at 85% 5%,  rgba(12,198,255,.22), transparent 22rem),
+            radial-gradient(circle at 10% 90%, rgba(63,94,251,.15), transparent 20rem),
+            radial-gradient(circle at 50% 50%, rgba(14,165,233,.06), transparent 18rem),
+            linear-gradient(120deg, rgba(255,255,255,.99), rgba(237,246,255,.99));
+        box-shadow: 0 8px 40px rgba(23,35,49,.11), inset 0 1px 0 rgba(255,255,255,.9);
+        position: relative;
+        overflow: hidden;
+        animation: slideUp .45s ease both;
+    }
+    /* animated dot-grid bg */
+    .dash-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: radial-gradient(circle, rgba(31,78,216,.06) 1px, transparent 1px);
+        background-size: 28px 28px;
+        pointer-events: none;
+    }
+    /* orbit accent */
+    .hero-orbit {
+        position: absolute; right: 200px; top: -30px;
+        width: 120px; height: 120px;
+        border-radius: 50%;
+        border: 1px dashed rgba(31,78,216,.12);
+        animation: orbitSpin 18s linear infinite;
+        pointer-events: none;
+    }
+    .hero-orbit::after {
+        content: '';
+        position: absolute; top: 10px; left: 50%;
+        width: 6px; height: 6px; border-radius: 50%;
+        background: rgba(31,78,216,.25);
+        transform: translateX(-50%);
     }
     .dash-title {
         margin: 0;
-        font-size: 1.05rem;
+        font-size: 1.08rem;
         font-weight: 800;
         color: #1c2f42;
         line-height: 1.25;
+        position: relative; z-index: 1;
+        animation: glitch 8s steps(1) infinite;
     }
     .dash-sub {
-        margin: .2rem 0 0;
+        margin: .25rem 0 0;
         color: #6b7d8f;
         font-size: .82rem;
+        position: relative; z-index: 1;
     }
+    .hero-right { display: flex; align-items: center; gap: 12px; position:relative;z-index:1; }
     .dash-date-chip {
         display: inline-flex;
         align-items: center;
         gap: .5rem;
-        border: 1px solid rgba(15, 107, 143, .24);
-        border-radius: 8px;
-        padding: .55rem .72rem;
-        background: rgba(15, 107, 143, .08);
+        border: 1px solid rgba(15,107,143,.24);
+        border-radius: 10px;
+        padding: .6rem .85rem;
+        background: rgba(15,107,143,.07);
         color: #0c4f69;
         font-size: .78rem;
         font-weight: 700;
         white-space: nowrap;
     }
+    .hero-stat {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 2px;
+        background: rgba(31,78,216,.05);
+        border: 1px solid rgba(31,78,216,.12);
+        border-radius: 10px;
+        padding: .45rem .8rem;
+        min-width: 72px;
+    }
+    .hero-stat-val {
+        font-size: .95rem; font-weight: 800; color: #1c2f42; line-height: 1;
+    }
+    .hero-stat-lbl {
+        font-size: .62rem; font-weight: 700; color: #7a8fa0;
+        text-transform: uppercase; letter-spacing: .05em;
+    }
     .kpi-card {
         border: 1px solid #d9e6ef !important;
-        border-radius: 12px !important;
-        box-shadow: 0 14px 28px rgba(23, 35, 49, .1) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 4px 20px rgba(23, 35, 49, .08) !important;
         overflow: hidden;
-        transition: transform .2s ease, box-shadow .2s ease;
+        position: relative;
+        transition: transform .22s ease, box-shadow .22s ease;
+        background: #fff;
     }
-    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 20px 34px rgba(23,35,49,.14) !important; }
-    .kpi-card .card-body { padding: .95rem 1rem; }
+    /* glowing top accent bar */
+    .kpi-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 3px;
+        opacity: 0;
+        transition: opacity .25s;
+    }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-blue::before   { background: linear-gradient(90deg,#1f53ff,#0cc6ff); }
+    .kpi-cyan::before   { background: linear-gradient(90deg,#0090d3,#2ad8f8); }
+    .kpi-green::before  { background: linear-gradient(90deg,#03a66f,#20d394); }
+    .kpi-amber::before  { background: linear-gradient(90deg,#db8f00,#ffc436); }
+    .kpi-purple::before { background: linear-gradient(90deg,#5742ff,#7f8dff); }
+    .kpi-navy::before   { background: linear-gradient(90deg,#203a63,#3f5efb); }
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(23,35,49,.13) !important; }
+    /* shimmer on hover */
+    .kpi-card::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+        background-size: 600px 100%;
+        opacity: 0;
+        transition: opacity .2s;
+        pointer-events: none;
+    }
+    .kpi-card:hover::after { opacity: 1; animation: shimmer .7s ease; }
+    .kpi-card .card-body { padding: 1rem 1.1rem; }
     .kpi-top {
         display: flex;
         align-items: center;
@@ -80,21 +221,41 @@
         margin: 0;
     }
     .kpi-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
+        width: 38px; height: 38px;
+        border-radius: 10px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: .95rem;
+        font-size: 1rem;
         color: #fff;
+        position: relative;
     }
+    /* pulse ring behind icon */
+    .kpi-icon::after {
+        content: '';
+        position: absolute; inset: 0;
+        border-radius: inherit;
+        animation: pulseRing 2.4s ease-out infinite;
+    }
+    .kpi-blue .kpi-icon { background: linear-gradient(135deg, #1f53ff, #0cc6ff); }
+    .kpi-blue .kpi-icon::after { background: rgba(31,83,255,.18); }
+    .kpi-cyan .kpi-icon { background: linear-gradient(135deg, #0090d3, #2ad8f8); }
+    .kpi-cyan .kpi-icon::after { background: rgba(0,144,211,.18); }
+    .kpi-green .kpi-icon { background: linear-gradient(135deg, #03a66f, #20d394); }
+    .kpi-green .kpi-icon::after { background: rgba(3,166,111,.18); }
+    .kpi-amber .kpi-icon { background: linear-gradient(135deg, #db8f00, #ffc436); }
+    .kpi-amber .kpi-icon::after { background: rgba(219,143,0,.18); }
+    .kpi-purple .kpi-icon { background: linear-gradient(135deg, #5742ff, #7f8dff); }
+    .kpi-purple .kpi-icon::after { background: rgba(87,66,255,.18); }
+    .kpi-navy .kpi-icon { background: linear-gradient(135deg, #203a63, #3f5efb); }
+    .kpi-navy .kpi-icon::after { background: rgba(32,58,99,.18); }
     .kpi-value {
         margin: 0;
         color: #13283a;
-        font-size: 1.48rem;
+        font-size: 1.6rem;
         font-weight: 800;
         line-height: 1.05;
+        animation: countPop .5s ease both;
     }
     .kpi-note {
         margin-top: .3rem;
@@ -102,151 +263,242 @@
         font-size: .77rem;
         font-weight: 600;
     }
-    .kpi-blue .kpi-icon { background: linear-gradient(135deg, #1f53ff, #0cc6ff); }
-    .kpi-cyan .kpi-icon { background: linear-gradient(135deg, #0090d3, #2ad8f8); }
-    .kpi-green .kpi-icon { background: linear-gradient(135deg, #03a66f, #20d394); }
-    .kpi-amber .kpi-icon { background: linear-gradient(135deg, #db8f00, #ffc436); }
-    .kpi-purple .kpi-icon { background: linear-gradient(135deg, #5742ff, #7f8dff); }
-    .kpi-navy .kpi-icon { background: linear-gradient(135deg, #203a63, #3f5efb); }
     .kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: .95rem;
-        margin-bottom: 1rem;
+        gap: 1rem;
+        margin-bottom: 1.1rem;
     }
+    .quick-grid{
+        display:grid;
+        grid-template-columns:repeat(4,minmax(0,1fr));
+        gap:.75rem;
+        margin:-.1rem 0 1rem;
+    }
+    .quick-link{
+        display:flex;align-items:center;gap:.55rem;
+        border:1px solid #dce8f0;border-radius:10px;
+        padding:.7rem .8rem;background:#fff;color:#17304a;
+        text-decoration:none;font-size:.78rem;font-weight:700;
+        box-shadow:0 4px 16px rgba(23,35,49,.06);
+    }
+    .quick-link:hover{background:#f3f9ff;color:#0f3b5a;text-decoration:none}
 
     .panel-card {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         overflow: hidden;
+        box-shadow: 0 4px 24px rgba(23,35,49,.09) !important;
+        border: 1px solid #dce8f0 !important;
     }
     .panel-head {
-        padding: .85rem 1rem !important;
-        border-bottom: 1px solid rgba(255,255,255,.08);
-        background: linear-gradient(135deg, #0f5877, #0f6b8f) !important;
+        padding: .9rem 1.1rem !important;
+        border-bottom: 1px solid rgba(255,255,255,.1);
+        background: linear-gradient(135deg, #0e4d6e, #0f6b8f, #0ea5e9) !important;
         color: #fff !important;
+        position: relative;
+        overflow: hidden;
+    }
+    /* scan line animation on panel head */
+    .panel-head::after {
+        content: '';
+        position: absolute;
+        left: 0; right: 0;
+        height: 1px;
+        background: rgba(255,255,255,.15);
+        animation: scanLine 3s linear infinite;
+        pointer-events: none;
     }
     .panel-head h6 {
         margin: 0;
         font-weight: 800;
-        font-size: .83rem;
-        letter-spacing: .01em;
+        font-size: .84rem;
+        letter-spacing: .02em;
+        position: relative; z-index: 1;
     }
     .panel-meta {
         display: inline-flex;
         align-items: center;
         gap: .45rem;
         border-radius: 999px;
-        padding: .28rem .62rem;
-        background: rgba(255,255,255,.16);
+        padding: .28rem .65rem;
+        background: rgba(255,255,255,.18);
         color: #fff;
         font-size: .72rem;
         font-weight: 700;
+        position: relative; z-index: 1;
+        border: 1px solid rgba(255,255,255,.2);
+        backdrop-filter: blur(4px);
     }
-    #dashMap { height: 360px; }
+    /* live dot */
+    .live-indicator {
+        display: inline-flex; align-items: center; gap: 5px;
+        position: relative; z-index:1;
+    }
+    .live-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #4ade80;
+        box-shadow: 0 0 0 0 rgba(74,222,128,.5);
+        animation: livePulse 1.8s ease-in-out infinite;
+        flex-shrink: 0;
+    }
+    @@keyframes livePulse {
+        0%   { box-shadow: 0 0 0 0 rgba(74,222,128,.5); }
+        70%  { box-shadow: 0 0 0 7px rgba(74,222,128,0); }
+        100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+    }
+    #dashMap { height: 380px; }
     .mini-empty {
         text-align: center;
         color: #788b9d;
-        padding: 1.15rem;
+        padding: 1.5rem;
         font-size: .82rem;
     }
     .visit-table td, .visit-table th { vertical-align: middle; }
-    .visit-table td { font-size: .82rem; }
+    .visit-table thead th {
+        font-size: .7rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: .06em;
+        color: #4d6880; background: #f3f8fd;
+        border-bottom: 2px solid #dce8f4;
+    }
+    .visit-table tbody tr {
+        transition: background .12s;
+        animation: fadeIn .3s ease both;
+    }
+    .visit-table tbody tr:hover { background: #f0f7ff; }
+    .visit-table td { font-size: .82rem; border-color: #eef4fb; }
     .visit-name {
         max-width: 120px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-weight: 700; color: #1c3148;
     }
     .visit-cp {
         max-width: 160px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        color: #446277;
     }
     .status-pill {
         display: inline-flex;
         align-items: center;
-        border-radius: 999px;
-        padding: .15rem .55rem;
-        font-size: .68rem;
+        gap: 4px;
+        border-radius: 6px;
+        padding: .18rem .6rem;
+        font-size: .67rem;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: .04em;
     }
-    .status-arrived { background: rgba(24,167,122,.13); color: #10684c; }
-    .status-completed { background: rgba(43,187,216,.15); color: #0d6b82; }
-    .status-skipped { background: rgba(217,76,76,.14); color: #9a3030; }
-    .status-pending { background: rgba(214,155,23,.14); color: #865f0b; }
+    .status-arrived  { background: rgba(24,167,122,.12); color: #0f6748; border: 1px solid rgba(24,167,122,.2); }
+    .status-completed{ background: rgba(43,187,216,.12); color: #0c5e79; border: 1px solid rgba(43,187,216,.2); }
+    .status-skipped  { background: rgba(217,76,76,.12);  color: #8f2c2c; border: 1px solid rgba(217,76,76,.2); }
+    .status-pending  { background: rgba(214,155,23,.12); color: #7a520a; border: 1px solid rgba(214,155,23,.2); }
     .sales-ana-card {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
         overflow: hidden;
     }
+    .sales-ana-card table thead th {
+        font-size: .7rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: .06em;
+        color: #4d6880; background: #f3f8fd;
+        border-bottom: 2px solid #dce8f4;
+    }
+    .sales-ana-card table tbody tr {
+        transition: background .12s;
+    }
+    .sales-ana-card table tbody tr:hover { background: #f0f7ff; }
+    .sales-ana-card table td { font-size: .82rem; border-color: #eef4fb; vertical-align: middle; }
+    /* progress bar in performance row */
+    .perf-bar-wrap {
+        display: flex; align-items: center; gap: 8px;
+    }
+    .perf-bar {
+        flex: 1; height: 6px; border-radius: 999px;
+        background: #e3edf6; overflow: hidden; min-width: 60px;
+    }
+    .perf-bar > span {
+        display: block; height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg,#1f4ed8,#0ea5e9);
+        animation: barFill .8s ease both;
+    }
+    .perf-bar.warn > span { background: linear-gradient(90deg,#db8f00,#ffc436); }
+    .perf-bar.danger > span { background: linear-gradient(90deg,#c53030,#f56565); }
     .sales-row { display: flex; align-items: center; gap: .75rem; }
     .sales-photo {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid rgba(15,107,143,.24);
-        flex-shrink: 0;
+        width: 40px; height: 40px;
+        border-radius: 50%; object-fit: cover;
+        border: 2px solid rgba(15,107,143,.28); flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(15,107,143,.15);
     }
     .sales-photo-fallback {
-        width: 42px;
-        height: 42px;
+        width: 40px; height: 40px;
         border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .82rem;
-        font-weight: 800;
-        color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .78rem; font-weight: 800; color: #fff;
         background: linear-gradient(135deg, #0f6b8f, #2bbbd8);
         flex-shrink: 0;
+        box-shadow: 0 0 0 3px rgba(15,107,143,.12);
     }
-    .sales-name {
-        margin: 0;
-        color: #183044;
-        font-size: .83rem;
-        font-weight: 800;
-        line-height: 1.15;
-    }
-    .sales-job {
-        margin: .18rem 0 0;
-        color: #6c8296;
-        font-size: .72rem;
-        font-weight: 700;
-    }
-    .star-wrap { color: #e4a11b; font-size: .78rem; letter-spacing: .04em; }
+    .sales-name { margin: 0; color: #183044; font-size: .83rem; font-weight: 800; line-height: 1.15; }
+    .sales-job  { margin: .16rem 0 0; color: #6c8296; font-size: .7rem; font-weight: 700; }
+    .star-wrap { color: #e4a11b; font-size: .76rem; letter-spacing: .04em; }
     .star-muted { color: #d2dbe2; }
     .achv-text {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: .18rem .55rem;
-        font-size: .68rem;
-        font-weight: 800;
-        background: rgba(15,107,143,.1);
-        color: #0c5f7f;
+        display: inline-flex; align-items: center;
+        border-radius: 6px; padding: .18rem .55rem;
+        font-size: .7rem; font-weight: 800;
+        background: rgba(15,107,143,.1); color: #0c5f7f;
+        border: 1px solid rgba(15,107,143,.15);
+    }
+    .online-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        border-radius: 6px; padding: .16rem .55rem;
+        font-size: .68rem; font-weight: 800;
+    }
+    .online-badge.active {
+        background: rgba(16,185,129,.1); color: #065f46;
+        border: 1px solid rgba(16,185,129,.25);
+    }
+    .online-badge.active::before {
+        content: ''; width: 6px; height: 6px; border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 0 0 rgba(16,185,129,.5);
+        animation: livePulse 1.8s infinite;
+    }
+    .online-badge.offline {
+        background: rgba(100,116,139,.09); color: #475569;
+        border: 1px solid rgba(100,116,139,.2);
     }
     .dummy-grid { display: grid; gap: 1rem; grid-template-columns: 1.1fr .9fr; }
     .dummy-card {
-        border: 1px solid #dbe6ef;
-        border-radius: 12px;
+        border: 1px solid #dce8f0;
+        border-radius: 14px;
         background: #fff;
-        box-shadow: 0 16px 30px rgba(22, 37, 52, .11);
+        box-shadow: 0 4px 24px rgba(22, 37, 52, .08);
         overflow: hidden;
+        transition: box-shadow .2s;
     }
+    .dummy-card:hover { box-shadow: 0 12px 36px rgba(22,37,52,.13); }
     .dummy-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: .7rem;
-        padding: .85rem 1rem;
-        background: linear-gradient(135deg, #1b3059, #1f4ed8);
+        padding: .88rem 1.1rem;
+        background: linear-gradient(135deg, #1b3059, #1f4ed8, #0ea5e9);
         color: #fff;
+        position: relative; overflow: hidden;
     }
-    .dummy-head h6 { margin: 0; font-size: .83rem; font-weight: 800; }
-    .dummy-body { padding: .95rem 1rem; }
+    .dummy-head::after {
+        content: '';
+        position: absolute; left: 0; right: 0;
+        height: 1px; background: rgba(255,255,255,.12);
+        animation: scanLine 3.5s linear infinite;
+    }
+    .dummy-head h6 { margin: 0; font-size: .83rem; font-weight: 800; position:relative;z-index:1; }
+    .dummy-body { padding: 1rem 1.1rem; }
     .seg-wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: .9rem; }
     .seg {
         border-radius: 8px;
@@ -286,6 +538,35 @@
         gap: .7rem;
         margin-top: .75rem;
     }
+    .guide-card{
+        border:1px solid #dce8f0;
+        border-radius:14px;
+        background:#fff;
+        box-shadow:0 4px 24px rgba(22,37,52,.08);
+        overflow:hidden;
+    }
+    .guide-head{
+        padding:.9rem 1.1rem;
+        background:linear-gradient(135deg,#1b3059,#1f4ed8,#0ea5e9);
+        color:#fff;
+        font-size:.9rem;
+        font-weight:800;
+    }
+    .guide-body{padding:1rem 1.1rem}
+    .guide-grid{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:.8rem;
+    }
+    .guide-item{
+        border:1px solid #e6eef5;
+        border-radius:10px;
+        padding:.75rem .8rem;
+        background:#f9fcff;
+    }
+    .guide-item h6{margin:0 0 .35rem;color:#163047;font-size:.82rem;font-weight:800}
+    .guide-item ol{margin:0;padding-left:1.05rem}
+    .guide-item li{font-size:.77rem;color:#4a647a;line-height:1.5;margin-bottom:.22rem}
     .dummy-sales-card {
         border: 1px solid #d8e4ef;
         border-radius: 10px;
@@ -344,17 +625,17 @@
         color: #16344d;
     }
     .dummy-progress {
-        height: 8px;
+        height: 7px;
         border-radius: 999px;
         background: #e4edf6;
         overflow: hidden;
         margin-bottom: .35rem;
     }
     .dummy-progress > span {
-        display: block;
-        height: 100%;
+        display: block; height: 100%;
         border-radius: 999px;
         background: linear-gradient(90deg, #1f4ed8, #0ea5e9);
+        animation: barFill .9s ease both;
     }
     .dummy-stars {
         color: #d4a84f;
@@ -393,23 +674,29 @@
         gap: 1rem;
     }
     .graph-card {
-        border: 1px solid #dbe6ef;
-        border-radius: 12px;
+        border: 1px solid #dce8f0;
+        border-radius: 14px;
         background: #fff;
-        box-shadow: 0 16px 30px rgba(22, 37, 52, .1);
+        box-shadow: 0 4px 24px rgba(22, 37, 52, .08);
         overflow: hidden;
+        transition: box-shadow .2s;
     }
+    .graph-card:hover { box-shadow: 0 12px 36px rgba(22,37,52,.13); }
     .graph-head {
-        padding: .82rem .95rem;
-        background: linear-gradient(135deg, #1a315a, #1f4ed8);
+        padding: .88rem 1.1rem;
+        background: linear-gradient(135deg, #1a315a, #1f4ed8, #0ea5e9);
         color: #fff;
-        font-size: .82rem;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+        font-size: .82rem; font-weight: 800;
+        display: flex; align-items: center; justify-content: space-between;
+        position: relative; overflow: hidden;
     }
-    .graph-body { padding: .9rem; }
+    .graph-head::after {
+        content: '';
+        position: absolute; left: 0; right: 0;
+        height: 1px; background: rgba(255,255,255,.12);
+        animation: scanLine 4s linear infinite;
+    }
+    .graph-body { padding: 1rem; }
     .mini-kpi-wrap {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -419,9 +706,11 @@
     .mini-kpi {
         border: 1px solid #d8e5f0;
         border-radius: 9px;
-        background: #f7fbff;
+        background: linear-gradient(135deg,#f7fbff,#eef6ff);
         padding: .55rem .6rem;
+        transition: transform .15s;
     }
+    .mini-kpi:hover { transform: scale(1.03); }
     .mini-kpi .v {
         color: #12314b;
         font-size: 1rem;
@@ -461,13 +750,15 @@
         overflow: hidden;
     }
     .funnel-bar > span {
-        display: block;
-        height: 100%;
-        border-radius: 999px;
+        display: block; height: 100%; border-radius: 999px;
+        animation: barFill 1s ease both;
     }
     @@media (max-width: 1199.98px) {
         .kpi-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .quick-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
     @@media (max-width: 991.98px) {
@@ -479,6 +770,7 @@
         .kpi-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+        .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         #dashMap { height: 300px; }
     }
 
@@ -539,6 +831,7 @@
         .kpi-grid {
             grid-template-columns: 1fr;
         }
+        .quick-grid { grid-template-columns: 1fr; }
         .dummy-body,
         .prem-card-body {
             padding: .85rem .85rem;
@@ -549,78 +842,89 @@
 
 <div class="dash-shell">
     <div class="dash-hero mb-4">
-        <div>
+        <div class="hero-orbit"></div>
+        <div style="position:relative;z-index:1;">
             <p class="dash-title"><i class="fas fa-chart-line mr-2 text-primary"></i>Ringkasan Operasional Sales</p>
             <p class="dash-sub">Pantau progres kunjungan, checkpoint aktif, dan posisi sales real-time dari satu halaman.</p>
         </div>
-        <div class="dash-date-chip">
-            <i class="fas fa-calendar-alt"></i>
-            @DateTime.Today.ToString("dddd, dd MMMM yyyy")
+        <div class="hero-right">
+            <div class="hero-stat anim-7">
+                <span class="hero-stat-val" data-count="@Model.TodayArrived">0</span>
+                <span class="hero-stat-lbl">Tiba</span>
+            </div>
+            <div class="hero-stat anim-8">
+                <span class="hero-stat-val" data-count="@Model.TodayPending">0</span>
+                <span class="hero-stat-lbl">Pending</span>
+            </div>
+            <div class="dash-date-chip">
+                <i class="fas fa-calendar-alt"></i>
+                @DateTime.Today.ToString("dddd, dd MMMM yyyy")
+            </div>
         </div>
     </div>
 
     <div class="kpi-grid">
-        <div class="kpi-item">
+        <div class="kpi-item anim-1">
             <div class="card kpi-card kpi-blue h-100">
                 <div class="card-body">
                     <div class="kpi-top">
                         <p class="kpi-label">User Aktif</p>
                         <span class="kpi-icon"><i class="fas fa-users"></i></span>
                     </div>
-                    <p class="kpi-value">@Model.TotalUsers</p>
+                    <p class="kpi-value" data-count="@Model.TotalUsers">0</p>
                     <div class="kpi-note">Akun dengan status aktif</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-2">
             <div class="card kpi-card kpi-cyan h-100">
                 <div class="card-body">
                     <div class="kpi-top">
                         <p class="kpi-label">Checkpoint</p>
                         <span class="kpi-icon"><i class="fas fa-map-pin"></i></span>
                     </div>
-                    <p class="kpi-value">@Model.TotalCheckpoints</p>
+                    <p class="kpi-value" data-count="@Model.TotalCheckpoints">0</p>
                     <div class="kpi-note">Lokasi kunjungan aktif</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-3">
             <div class="card kpi-card kpi-purple h-100">
                 <div class="card-body">
                     <div class="kpi-top">
                         <p class="kpi-label">Kunjungan Hari Ini</p>
                         <span class="kpi-icon"><i class="fas fa-route"></i></span>
                     </div>
-                    <p class="kpi-value">@Model.TodayVisits</p>
+                    <p class="kpi-value" data-count="@Model.TodayVisits">0</p>
                     <div class="kpi-note">Total visit terjadwal</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-4">
             <div class="card kpi-card kpi-green h-100">
                 <div class="card-body">
                     <div class="kpi-top">
                         <p class="kpi-label">Sudah Tiba</p>
                         <span class="kpi-icon"><i class="fas fa-check-circle"></i></span>
                     </div>
-                    <p class="kpi-value">@Model.TodayArrived</p>
+                    <p class="kpi-value" data-count="@Model.TodayArrived">0</p>
                     <div class="kpi-note">Visit dengan status tiba</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-5">
             <div class="card kpi-card kpi-amber h-100">
                 <div class="card-body">
                     <div class="kpi-top">
                         <p class="kpi-label">Pending</p>
                         <span class="kpi-icon"><i class="fas fa-clock"></i></span>
                     </div>
-                    <p class="kpi-value">@Model.TodayPending</p>
+                    <p class="kpi-value" data-count="@Model.TodayPending">0</p>
                     <div class="kpi-note">Visit belum dieksekusi</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-6">
             <div class="card kpi-card kpi-navy h-100">
                 <div class="card-body">
                     <div class="kpi-top">
@@ -632,7 +936,7 @@
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
+        <div class="kpi-item anim-7">
             <div class="card kpi-card kpi-purple h-100">
                 <div class="card-body">
                     <div class="kpi-top">
@@ -640,22 +944,28 @@
                         <span class="kpi-icon"><i class="fas fa-bullseye"></i></span>
                     </div>
                     <p class="kpi-value">@Model.AvgAchievementPercent.ToString("0.#")%</p>
-                    <div class="kpi-note">Progress terhadap target harian</div>
+                    <div class="kpi-note">Completion rate kunjungan: @Model.VisitCompletionRate.ToString("0.#")%</div>
                 </div>
             </div>
         </div>
-        <div class="kpi-item">
-            <div class="card kpi-card h-100">
+        <div class="kpi-item anim-8">
+            <div class="card kpi-card kpi-blue h-100">
                 <div class="card-body">
                     <div class="kpi-top">
-                        <p class="kpi-label">Skor Kualitas</p>
-                        <span class="kpi-icon" style="background:linear-gradient(135deg,#b98a2a,#e1be70);"><i class="fas fa-crown"></i></span>
+                        <p class="kpi-label">Pending Approval</p>
+                        <span class="kpi-icon"><i class="fas fa-bell"></i></span>
                     </div>
-                    <p class="kpi-value">A+</p>
-                    <div class="kpi-note">Premium sales execution score</div>
+                    <p class="kpi-value" data-count="@Model.TotalPendingApprovals">0</p>
+                    <div class="kpi-note">Toko @Model.PendingStoreSubmissions · Izin @Model.PendingLeaveApprovals · Lembur @Model.PendingOvertimeApprovals</div>
                 </div>
             </div>
         </div>
+    </div>
+    <div class="quick-grid anim-8">
+        <a class="quick-link" href="/Approval/Index"><i class="fas fa-tasks text-primary"></i>Proses Approval</a>
+        <a class="quick-link" href="/SalesSchedule/Index"><i class="fas fa-calendar-check text-info"></i>Atur Jadwal Kunjungan</a>
+        <a class="quick-link" href="/SalesTracking/History"><i class="fas fa-file-export text-success"></i>Laporan Kunjungan</a>
+        <a class="quick-link" href="/Audit/Index"><i class="fas fa-clipboard-list text-warning"></i>Audit Aktivitas</a>
     </div>
 
     <div class="row">
@@ -663,7 +973,10 @@
             <div class="card shadow panel-card h-100">
                 <div class="card-header panel-head d-flex align-items-center justify-content-between">
                     <h6><i class="fas fa-satellite-dish mr-2"></i>Live Sales - Posisi 30 Menit Terakhir</h6>
-                    <span class="panel-meta"><i class="fas fa-broadcast-tower"></i><span id="onlineCount">@Model.SalesOnline.Count online</span></span>
+                    <div class="d-flex align-items-center gap-2" style="gap:.6rem;">
+                        <span class="live-indicator"><span class="live-dot"></span></span>
+                        <span class="panel-meta"><i class="fas fa-broadcast-tower"></i><span id="onlineCount">@Model.SalesOnline.Count online</span></span>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div id="dashMap"></div>
@@ -730,7 +1043,10 @@
             <div class="card shadow sales-ana-card">
                 <div class="card-header panel-head d-flex align-items-center justify-content-between">
                     <h6><i class="fas fa-user-tie mr-2"></i>Analitik Sales Harian</h6>
-                    <span class="panel-meta"><i class="fas fa-clipboard-check"></i>Target Kunjungan</span>
+                    <div class="d-flex align-items-center" style="gap:.6rem;">
+                        <span class="live-indicator"><span class="live-dot"></span></span>
+                        <span class="panel-meta"><i class="fas fa-clipboard-check"></i>Target Kunjungan</span>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -741,7 +1057,7 @@
                                     <th>Aktif</th>
                                     <th>Target</th>
                                     <th>Realisasi</th>
-                                    <th>Capaian</th>
+                                    <th style="min-width:140px;">Capaian</th>
                                     <th>Rating</th>
                                     <th>Terakhir Online</th>
                                 </tr>
@@ -754,12 +1070,14 @@
                                 @foreach (var s in Model.SalesPerformances)
                                 {
                                     var initials = string.Join("", s.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => x[0])).ToUpper();
+                                    var barClass = s.AchievementPercent >= 80 ? "" : (s.AchievementPercent >= 40 ? "warn" : "danger");
+                                    var barWidth = Math.Min(100, (int)s.AchievementPercent);
                                     <tr>
                                         <td>
                                             <div class="sales-row">
                                                 @if (!string.IsNullOrWhiteSpace(s.PhotoPath))
                                                 {
-                                                    <img src="@s.PhotoPath" alt="@s.FullName" class="sales-photo" />
+                                                    <img src="@s.PhotoPath" alt="@System.Net.WebUtility.HtmlEncode(s.FullName)" class="sales-photo" />
                                                 }
                                                 else
                                                 {
@@ -774,16 +1092,21 @@
                                         <td>
                                             @if (s.IsActiveToday)
                                             {
-                                                <span class="badge badge-success">Aktif</span>
+                                                <span class="online-badge active">Online</span>
                                             }
                                             else
                                             {
-                                                <span class="badge badge-secondary">Offline</span>
+                                                <span class="online-badge offline">Offline</span>
                                             }
                                         </td>
                                         <td><strong>@s.DailyTarget</strong></td>
                                         <td><strong>@s.CompletedVisits</strong></td>
-                                        <td><span class="achv-text">@s.AchievementPercent.ToString("0.#")%</span></td>
+                                        <td>
+                                            <div class="perf-bar-wrap">
+                                                <div class="perf-bar @barClass"><span style="width:@barWidth%"></span></div>
+                                                <span class="achv-text">@s.AchievementPercent.ToString("0.#")%</span>
+                                            </div>
+                                        </td>
                                         <td>
                                             <span class="star-wrap">
                                                 @for (var i = 1; i <= 5; i++)
@@ -984,11 +1307,114 @@
             </div>
         </div>
     </div>
+
+    <div class="guide-card mb-4">
+        <div class="guide-head"><i class="fas fa-book-reader mr-2"></i>Anda Bingung? Tutorial Penggunaan Aplikasi</div>
+        <div class="guide-body">
+            <div class="guide-grid">
+                <div class="guide-item">
+                    <h6>1. Dashboard & Live Tracking</h6>
+                    <ol>
+                        <li>Buka <strong>Dashboard</strong> untuk lihat KPI, target, dan performa sales.</li>
+                        <li>Masuk ke <strong>Live Tracking</strong> untuk memantau posisi sales real-time.</li>
+                        <li>Cek <strong>Riwayat Kunjungan</strong> untuk validasi kunjungan harian.</li>
+                    </ol>
+                </div>
+                <div class="guide-item">
+                    <h6>2. Checkpoint & Toko</h6>
+                    <ol>
+                        <li>Tambah titik toko di <strong>Daftar Checkpoint</strong>.</li>
+                        <li>Atur radius valid kunjungan setiap checkpoint.</li>
+                        <li>Pantau sebaran toko melalui <strong>Peta Checkpoint</strong>.</li>
+                    </ol>
+                </div>
+                <div class="guide-item">
+                    <h6>3. Jadwal Kunjungan Sales</h6>
+                    <ol>
+                        <li>Atur jadwal dari menu <strong>Target Harian Sales</strong> atau <strong>Jadwal Kunjungan</strong>.</li>
+                        <li>Gunakan slot jam agar kunjungan tidak bentrok.</li>
+                        <li>Jalankan <strong>Auto Re-assign</strong> jika sales tidak hadir.</li>
+                    </ol>
+                </div>
+                <div class="guide-item">
+                    <h6>4. Payroll / HRIS Basic</h6>
+                    <ol>
+                        <li>Set geofence absen di <strong>Setting Lokasi Absen</strong>.</li>
+                        <li>Cek data masuk/pulang di <strong>Laporan Absen</strong>.</li>
+                        <li>Kelola approval <strong>Izin &amp; Lembur</strong> bertahap Supervisor ke HR.</li>
+                    </ol>
+                </div>
+                <div class="guide-item">
+                    <h6>5. Role & Hak Akses</h6>
+                    <ol>
+                        <li>Buat role di <strong>Manajemen Role</strong>.</li>
+                        <li>Atur menu role di <strong>Akses Role-Menu</strong>.</li>
+                        <li>Pastikan menu Sales, Pengawas, dan Admin tidak saling tumpang tindih.</li>
+                    </ol>
+                </div>
+                <div class="guide-item">
+                    <h6>6. Alur Operasional Harian</h6>
+                    <ol>
+                        <li>Admin set target + jadwal kunjungan toko.</li>
+                        <li>Sales jalankan rute, kirim GPS berkala, dan lapor hasil kunjungan.</li>
+                        <li>Supervisor review performa, approval, dan tindak lanjut KPI harian.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
+    /* ── countUp animation ── */
+    function countUp(el) {
+        var target = parseFloat(el.dataset.count);
+        if (isNaN(target)) return;
+        var isInt = Number.isInteger(target);
+        var duration = 900;
+        var start = null;
+        function step(ts) {
+            if (!start) start = ts;
+            var progress = Math.min((ts - start) / duration, 1);
+            var ease = 1 - Math.pow(1 - progress, 3);
+            var val = target * ease;
+            el.textContent = isInt ? Math.round(val) : val.toFixed(1);
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+    document.querySelectorAll('[data-count]').forEach(function(el) { countUp(el); });
+
+    /* ── live clock update ── */
+    var clockEl = document.getElementById('liveClock');
+    function updateClock() {
+        if (!clockEl) return;
+        var now = new Date();
+        var h = String(now.getHours()).padStart(2,'0');
+        var m = String(now.getMinutes()).padStart(2,'0');
+        var s = String(now.getSeconds()).padStart(2,'0');
+        clockEl.textContent = h + ':' + m + ':' + s;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ── IntersectionObserver for table rows ── */
+    var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) {
+                e.target.style.animation = 'slideUp .4s ease both';
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.visit-table tbody tr').forEach(function(tr, i) {
+        tr.style.animationDelay = (i * 0.06) + 's';
+        io.observe(tr);
+    });
+
+    /* ── map ── */
     var salesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SalesOnline.Select(s => new {
         s.FullName, s.LastLatitude, s.LastLongitude,
         lastSeen = s.LastSeen?.ToString("HH:mm") ?? "-"
@@ -1025,6 +1451,7 @@
         document.getElementById('mapEmpty').classList.remove('d-none');
     }
 
+    /* ── Chart.js trend ── */
     var trendCtx = document.getElementById('dummyTrendChart');
     if (trendCtx) {
         new Chart(trendCtx, {
@@ -1052,7 +1479,7 @@
                 }]
             },
             options: {
-                animation: false,
+                animation: { duration: 1200, easing: 'easeOutQuart' },
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { intersect: false, mode: 'nearest' },
@@ -1068,6 +1495,7 @@
         });
     }
 
+    /* ── Chart.js doughnut ── */
     var mixCtx = document.getElementById('dummyMixChart');
     if (mixCtx) {
         new Chart(mixCtx, {
@@ -1081,7 +1509,7 @@
                 }]
             },
             options: {
-                animation: false,
+                animation: { duration: 1000, easing: 'easeOutBounce' },
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '68%',

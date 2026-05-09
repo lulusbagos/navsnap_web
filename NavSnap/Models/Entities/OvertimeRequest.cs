@@ -36,6 +36,24 @@ namespace NavSnap.Models.Entities
         [Column("approved_at")]
         public DateTime? ApprovedAt { get; set; }
 
+        [Column("approval_stage")]
+        public int ApprovalStage { get; set; } = 1;
+
+        [Column("supervisor_approved_by")]
+        public int? SupervisorApprovedBy { get; set; }
+
+        [Column("supervisor_approved_at")]
+        public DateTime? SupervisorApprovedAt { get; set; }
+
+        [Column("hr_approved_by")]
+        public int? HrApprovedBy { get; set; }
+
+        [Column("hr_approved_at")]
+        public DateTime? HrApprovedAt { get; set; }
+
+        [Column("sla_due_at")]
+        public DateTime? SlaDueAt { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

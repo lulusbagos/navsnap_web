@@ -2,87 +2,474 @@
 @{
     ViewData["Title"] = "Manajemen User";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalUsers  = Model.Count;
+    int activeUsers = Model.Count(u => u.IsActive);
+    int inactiveUsers = Model.Count(u => !u.IsActive);
+    int adminUsers  = Model.Count(u => u.UserRoles.Any(r => r.Role.RoleName == "Administrator"));
+
+    string[] avatarPalette = {
+        "#4e73df","#1cc88a","#36b9cc","#f6c23e","#e74a3b",
+        "#6f42c1","#fd7e14","#20c9a6","#5a5c69","#858796"
+    };
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-users mr-2 text-primary"></i>Manajemen User
-    </h1>
-    <a asp-action="Create" class="btn btn-primary btn-sm">
-        <i class="fas fa-user-plus mr-1"></i>Tambah User
+<style>
+/* ── Page header ─────────────────────────── */
+.pu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: puFadeDown .4s ease both;
+}
+.pu-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.pu-header-left span {
+    font-size: .8rem;
+    color: #718096;
+}
+.pu-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1.1rem;
+    border-radius: 8px;
+    font-size: .83rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+}
+.pu-btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(78,115,223,.45);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── Stats cards ─────────────────────────── */
+.pu-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@@media (max-width: 900px) { .pu-stats { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 520px)  { .pu-stats { grid-template-columns: 1fr; } }
+
+.pu-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    border-left: 4px solid var(--sc);
+    animation: puFadeUp .45s ease both;
+}
+.pu-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.pu-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.1s  }
+.pu-stat:nth-child(3){ --sc:#e74a3b; animation-delay:.15s }
+.pu-stat:nth-child(4){ --sc:#f6c23e; animation-delay:.2s  }
+
+.pu-stat-icon {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--sc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sc);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.pu-stat-info { flex: 1; min-width: 0; }
+.pu-stat-val  { font-size: 1.5rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+.pu-stat-lbl  { font-size: .73rem; color: #718096; margin-top: 2px; white-space: nowrap; }
+
+/* ── Table card ──────────────────────────── */
+.pu-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    animation: puFadeUp .5s ease .2s both;
+}
+.pu-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a3a6e 0%, #2d6bc4 100%);
+    color: #fff;
+}
+.pu-card-title {
+    font-size: .92rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.pu-count-badge {
+    background: rgba(255,255,255,.18);
+    border-radius: 20px;
+    padding: .15rem .55rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.pu-search-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.pu-search-wrap i {
+    position: absolute;
+    left: .7rem; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.6);
+    font-size: .8rem;
+    pointer-events: none;
+}
+.pu-search {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 8px;
+    padding: .4rem .75rem .4rem 2rem;
+    font-size: .8rem;
+    color: #fff;
+    width: 200px;
+    outline: none;
+    transition: background .2s, border .2s;
+}
+.pu-search::placeholder { color: rgba(255,255,255,.5); }
+.pu-search:focus {
+    background: rgba(255,255,255,.2);
+    border-color: rgba(255,255,255,.5);
+}
+
+/* ── Table ───────────────────────────────── */
+.pu-table-wrap { overflow-x: auto; }
+.pu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+}
+.pu-table thead th {
+    padding: .7rem 1rem;
+    background: #f8f9fc;
+    color: #5a5c69;
+    font-weight: 700;
+    font-size: .73rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #e3e6f0;
+    white-space: nowrap;
+}
+.pu-table tbody tr {
+    border-bottom: 1px solid #f0f2f8;
+    transition: background .15s;
+}
+.pu-table tbody tr:last-child { border-bottom: none; }
+.pu-table tbody tr:hover { background: #f8f9ff; }
+.pu-table td { padding: .75rem 1rem; vertical-align: middle; color: #3d4a5c; }
+
+/* ── Avatar ──────────────────────────────── */
+.pu-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0;
+}
+.pu-user-cell {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+}
+.pu-user-cell strong {
+    font-weight: 600;
+    color: #2d3748;
+    line-height: 1.2;
+}
+.pu-user-cell small {
+    color: #a0aec0;
+    font-size: .72rem;
+}
+
+/* ── Badges ──────────────────────────────── */
+.pu-role {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 600;
+    margin: 1px 2px 1px 0;
+}
+.pu-role-admin    { background:#fde8e8; color:#c0392b; }
+.pu-role-pengawas { background:#fef9e7; color:#b7770d; }
+.pu-role-default  { background:#e8f4fd; color:#2471a3; }
+
+.pu-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .22rem .65rem;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.pu-status-on  { background:#d4edda; color:#155724; }
+.pu-status-off { background:#e2e3e5; color:#565e64; }
+.pu-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.pu-status-on  .pu-status-dot { background:#28a745; }
+.pu-status-off .pu-status-dot { background:#868e96; }
+
+/* ── Action buttons ──────────────────────── */
+.pu-actions { display: flex; gap: .35rem; align-items: center; }
+.pu-btn-icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: .75rem;
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+}
+.pu-btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+.pu-btn-edit   { background:#fff3cd; color:#856404; }
+.pu-btn-delete { background:#f8d7da; color:#842029; }
+
+/* ── Empty state ─────────────────────────── */
+.pu-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #a0aec0;
+}
+.pu-empty i { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
+
+/* ── Animations ──────────────────────────── */
+@@keyframes puFadeDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@@keyframes puFadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Hidden row (search) ─────────────────── */
+.pu-hidden { display: none !important; }
+</style>
+
+<!-- Header -->
+<div class="pu-header">
+    <div class="pu-header-left">
+        <h2><i class="fas fa-users mr-2" style="color:#4e73df;"></i>Manajemen User</h2>
+        <span>Kelola akun pengguna dan hak akses sistem</span>
+    </div>
+    <a asp-action="Create" class="pu-btn-add">
+        <i class="fas fa-user-plus"></i> Tambah User
     </a>
 </div>
 
-<div class="card shadow">
-    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-        <h6 class="m-0 font-weight-bold"><i class="fas fa-table mr-2"></i>Daftar User (@Model.Count)</h6>
+<!-- Stats -->
+<div class="pu-stats">
+    <div class="pu-stat">
+        <div class="pu-stat-icon"><i class="fas fa-users"></i></div>
+        <div class="pu-stat-info">
+            <div class="pu-stat-val">@totalUsers</div>
+            <div class="pu-stat-lbl">Total User</div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="thead-light">
+    <div class="pu-stat">
+        <div class="pu-stat-icon"><i class="fas fa-user-check"></i></div>
+        <div class="pu-stat-info">
+            <div class="pu-stat-val">@activeUsers</div>
+            <div class="pu-stat-lbl">User Aktif</div>
+        </div>
+    </div>
+    <div class="pu-stat">
+        <div class="pu-stat-icon"><i class="fas fa-user-times"></i></div>
+        <div class="pu-stat-info">
+            <div class="pu-stat-val">@inactiveUsers</div>
+            <div class="pu-stat-lbl">Nonaktif</div>
+        </div>
+    </div>
+    <div class="pu-stat">
+        <div class="pu-stat-icon"><i class="fas fa-user-shield"></i></div>
+        <div class="pu-stat-info">
+            <div class="pu-stat-val">@adminUsers</div>
+            <div class="pu-stat-lbl">Administrator</div>
+        </div>
+    </div>
+</div>
+
+<!-- TempData alert -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+         style="border-radius:10px;font-size:.84rem;border:none;background:#d4edda;">
+        <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+}
+
+<!-- Table card -->
+<div class="pu-card">
+    <div class="pu-card-header">
+        <div class="pu-card-title">
+            <i class="fas fa-table"></i>
+            Daftar User
+            <span class="pu-count-badge" id="puCountBadge">@totalUsers</span>
+        </div>
+        <div class="pu-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" class="pu-search" id="puSearch" placeholder="Cari username, nama, email…" />
+        </div>
+    </div>
+    <div class="pu-table-wrap">
+        <table class="pu-table" id="puTable">
+            <thead>
+                <tr>
+                    <th style="width:42px">#</th>
+                    <th>User</th>
+                    <th>Nama Lengkap</th>
+                    <th>Email</th>
+                    <th>Telepon</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Dibuat</th>
+                    <th style="width:80px">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="puTbody">
+                @{
+                    int no = 1;
+                    int colorIdx = 0;
+                }
+                @foreach (var u in Model)
+                {
+                    var avatarColor = avatarPalette[colorIdx % avatarPalette.Length];
+                    colorIdx++;
+                    var initials = u.FullName.Length >= 2
+                        ? (u.FullName.Split(' ').Length >= 2
+                            ? u.FullName.Split(' ')[0][0].ToString().ToUpper() + u.FullName.Split(' ')[1][0].ToString().ToUpper()
+                            : u.FullName.Substring(0, 2).ToUpper())
+                        : u.FullName.ToUpper();
+
                     <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Nama Lengkap</th>
-                        <th>Email</th>
-                        <th>Telepon</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Dibuat</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{int no = 1;}
-                    @foreach (var u in Model)
-                    {
-                        <tr>
-                            <td>@no++</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white mr-2"
-                                         style="width:32px;height:32px;font-size:12px;font-weight:700;flex-shrink:0;">
-                                        @u.FullName.First().ToString().ToUpper()
-                                    </div>
+                        <td style="color:#a0aec0;font-size:.77rem;font-weight:600;">@no++</td>
+                        <td>
+                            <div class="pu-user-cell">
+                                <div class="pu-avatar" style="background:@avatarColor;">@initials</div>
+                                <div>
                                     <strong>@u.Username</strong>
                                 </div>
-                            </td>
-                            <td>@u.FullName</td>
-                            <td class="small text-muted">@(u.Email ?? "—")</td>
-                            <td class="small">@(u.Phone ?? "—")</td>
-                            <td>
-                                @foreach (var ur in u.UserRoles)
-                                {
-                                    var badgeColor = ur.Role.RoleName == "Administrator" ? "badge-danger"
-                                                   : ur.Role.RoleName == "Pengawas" ? "badge-warning"
-                                                   : "badge-info";
-                                    <span class="badge @badgeColor mr-1">@ur.Role.RoleName</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                @if (u.IsActive)
-                                { <span class="badge badge-success">Aktif</span> }
-                                else
-                                { <span class="badge badge-secondary">Nonaktif</span> }
-                            </td>
-                            <td class="small text-muted">@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                            </div>
+                        </td>
+                        <td>@u.FullName</td>
+                        <td style="color:#718096;font-size:.8rem;">@(u.Email ?? "—")</td>
+                        <td style="color:#718096;font-size:.8rem;">@(u.Phone ?? "—")</td>
+                        <td>
+                            @foreach (var ur in u.UserRoles)
+                            {
+                                var rc = ur.Role.RoleName == "Administrator" ? "pu-role-admin"
+                                       : ur.Role.RoleName == "Pengawas"      ? "pu-role-pengawas"
+                                       : "pu-role-default";
+                                var ri = ur.Role.RoleName == "Administrator" ? "fa-user-shield"
+                                       : ur.Role.RoleName == "Pengawas"      ? "fa-eye"
+                                       : "fa-user";
+                                <span class="pu-role @rc"><i class="fas @ri"></i>@ur.Role.RoleName</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="pu-status pu-status-on">
+                                    <span class="pu-status-dot"></span>Aktif
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="pu-status pu-status-off">
+                                    <span class="pu-status-dot"></span>Nonaktif
+                                </span>
+                            }
+                        </td>
+                        <td style="color:#a0aec0;font-size:.78rem;">@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <div class="pu-actions">
+                                <a asp-action="Edit" asp-route-id="@u.Id" class="pu-btn-icon pu-btn-edit" title="Edit">
+                                    <i class="fas fa-pen"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@u.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Hapus user @u.Username?')">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                    <button type="submit" class="pu-btn-icon pu-btn-delete" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (totalUsers == 0)
+        {
+            <div class="pu-empty">
+                <i class="fas fa-users-slash"></i>
+                <p style="font-size:.85rem;">Belum ada data user.</p>
+            </div>
+        }
     </div>
 </div>
+
+<script>
+(function () {
+    const input = document.getElementById('puSearch');
+    const tbody = document.getElementById('puTbody');
+    const badge = document.getElementById('puCountBadge');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        let visible = 0;
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            const text = row.textContent.toLowerCase();
+            const show = !q || text.includes(q);
+            row.classList.toggle('pu-hidden', !show);
+            if (show) visible++;
+        });
+        badge.textContent = visible;
+    });
+})();
+</script>

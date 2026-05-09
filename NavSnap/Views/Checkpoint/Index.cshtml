@@ -2,39 +2,152 @@
 @{
     ViewData["Title"] = "Daftar Checkpoint";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalAktif    = Model.Count(c => c.IsActive);
+    int totalNonaktif = Model.Count(c => !c.IsActive);
 }
 
+@section Styles {
+<style>
+    /* ── stat cards ── */
+    .stat-card { border: none; border-radius: 12px; transition: transform .15s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-card .icon-box {
+        width: 52px; height: 52px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.35rem;
+    }
+    /* ── table card ── */
+    .table-card { border: none; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+    .table-card .card-header {
+        background: linear-gradient(135deg,#1565c0,#1e88e5);
+        padding: 1rem 1.5rem;
+    }
+    /* ── table ── */
+    #cpTable { font-size: .83rem; }
+    #cpTable thead th {
+        background: #f0f4ff; color: #3a4a6b;
+        font-weight: 700; font-size: .74rem;
+        text-transform: uppercase; letter-spacing: .04em;
+        border-bottom: 2px solid #d0d9f0; padding: .75rem 1rem;
+        white-space: nowrap;
+    }
+    #cpTable tbody tr { transition: background .12s; }
+    #cpTable tbody tr:hover { background: #f5f8ff; }
+    #cpTable td { padding: .65rem 1rem; vertical-align: middle; border-color: #eef1f8; }
+    /* ── badges ── */
+    .badge-cp {
+        font-size: .72rem; font-weight: 600;
+        padding: .3em .65em; border-radius: 6px; letter-spacing: .02em;
+    }
+    .badge-active   { background: #e8f5e9; color: #2e7d32; }
+    .badge-inactive { background: #f5f5f5; color: #757575; }
+    .badge-radius   { background: #e3f2fd; color: #1565c0; font-size: .72rem; padding: .3em .6em; border-radius: 6px; font-weight: 600; }
+    .badge-coord    { background: #f3e5f5; color: #6a1b9a; font-size: .72rem; padding: .3em .6em; border-radius: 6px; font-family: monospace; }
+    /* ── search ── */
+    #cpSearch { max-width: 240px; border-radius: 20px; font-size: .82rem; }
+    /* ── action buttons ── */
+    .btn-action { border-radius: 8px; padding: .25rem .55rem; font-size: .78rem; }
+    /* ── empty state ── */
+    .empty-state { padding: 4rem 2rem; }
+    .empty-state i { font-size: 3rem; color: #d0d9f0; }
+    /* ── cp name cell ── */
+    .cp-pin-dot {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: linear-gradient(135deg,#1565c0,#42a5f5);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+</style>
+}
+
+<!-- ── Page heading ─────────────────────────────────────────── -->
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-map-pin mr-2 text-primary"></i>Daftar Checkpoint
-    </h1>
     <div>
-        <a asp-action="Map" class="btn btn-info btn-sm mr-2">
-            <i class="fas fa-map mr-1"></i>Lihat Peta
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
+            <i class="fas fa-map-pin mr-2 text-primary"></i>Daftar Checkpoint
+        </h1>
+        <p class="text-muted small mb-0 mt-1">Kelola titik kunjungan dan radius validasi lokasi</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Map" class="btn btn-outline-info shadow-sm mr-2">
+            <i class="fas fa-map mr-2"></i>Lihat Peta
         </a>
-        <a asp-action="Create" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus mr-1"></i>Tambah Checkpoint
+        <a asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus mr-2"></i>Tambah Checkpoint
         </a>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-        <h6 class="m-0 font-weight-bold"><i class="fas fa-list mr-2"></i>Data Checkpoint</h6>
+<!-- ── Summary stats ─────────────────────────────────────────── -->
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-4 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#e8f4fd;">
+                    <i class="fas fa-map-pin text-primary"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Total Checkpoint</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
+    <div class="col-xl-4 col-md-4 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#e8f5e9;">
+                    <i class="fas fa-check-circle" style="color:#2e7d32;"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Aktif</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalAktif</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-4 mb-3">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="icon-box mr-3" style="background:#f5f5f5;">
+                    <i class="fas fa-times-circle" style="color:#757575;"></i>
+                </div>
+                <div>
+                    <div class="small font-weight-bold text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;">Nonaktif</div>
+                    <div class="h4 mb-0 font-weight-bold text-gray-800">@totalNonaktif</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Data table ────────────────────────────────────────────── -->
+<div class="card table-card">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-list mr-2 text-white"></i>
+            <h6 class="m-0 font-weight-bold text-white">
+                Data Checkpoint
+                <span class="badge badge-light text-primary ml-2">@Model.Count</span>
+            </h6>
+        </div>
+        <input type="text" id="cpSearch" class="form-control form-control-sm"
+               placeholder="Cari checkpoint..." />
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="checkpointTable">
-                <thead class="thead-light">
+            <table class="table mb-0" id="cpTable">
+                <thead>
                     <tr>
-                        <th width="50">#</th>
+                        <th style="width:44px;">#</th>
                         <th>Nama Checkpoint</th>
                         <th>Alamat</th>
                         <th>Koordinat</th>
-                        <th width="90">Radius</th>
-                        <th width="80">Status</th>
-                        <th width="120">Dibuat</th>
-                        <th width="120">Aksi</th>
+                        <th style="width:90px;">Radius</th>
+                        <th style="width:90px;">Status</th>
+                        <th style="width:110px;">Dibuat</th>
+                        <th style="width:110px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,43 +155,92 @@
                     @foreach (var cp in Model)
                     {
                         <tr>
-                            <td>@no++</td>
+                            <td class="text-muted">@no++</td>
                             <td>
-                                <i class="fas fa-map-pin text-primary mr-1"></i>
-                                <strong>@cp.CheckpointName</strong>
+                                <div class="d-flex align-items-center">
+                                    <div class="cp-pin-dot mr-2">
+                                        <i class="fas fa-map-pin text-white" style="font-size:.75rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-weight-bold" style="line-height:1.2;">@cp.CheckpointName</div>
+                                        @if (cp.Creator != null)
+                                        {
+                                            <div class="text-muted" style="font-size:.72rem;">oleh @cp.Creator.FullName</div>
+                                        }
+                                    </div>
+                                </div>
                             </td>
-                            <td class="small text-muted">@(cp.Address ?? "—")</td>
-                            <td class="small font-monospace">
-                                <span class="badge badge-light border">@cp.Latitude.ToString("F6"), @cp.Longitude.ToString("F6")</span>
+                            <td class="text-muted" style="font-size:.78rem;max-width:200px;white-space:normal;">
+                                @(cp.Address ?? "—")
                             </td>
-                            <td class="text-center"><span class="badge badge-info">@cp.RadiusMeters m</span></td>
+                            <td>
+                                <a href="https://www.google.com/maps?q=@cp.Latitude,@cp.Longitude"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="badge-coord text-decoration-none d-inline-block">
+                                    <i class="fas fa-crosshairs mr-1"></i>@cp.Latitude.ToString("F5"), @cp.Longitude.ToString("F5")
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge-radius"><i class="fas fa-circle-notch mr-1"></i>@cp.RadiusMeters m</span>
+                            </td>
                             <td class="text-center">
                                 @if (cp.IsActive)
-                                { <span class="badge badge-success">Aktif</span> }
+                                {
+                                    <span class="badge badge-cp badge-active"><i class="fas fa-circle mr-1" style="font-size:.55rem;"></i>Aktif</span>
+                                }
                                 else
-                                { <span class="badge badge-secondary">Nonaktif</span> }
+                                {
+                                    <span class="badge badge-cp badge-inactive"><i class="fas fa-circle mr-1" style="font-size:.55rem;"></i>Nonaktif</span>
+                                }
                             </td>
-                            <td class="small text-muted">@cp.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td class="text-muted" style="font-size:.78rem;white-space:nowrap;">
+                                @cp.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                            </td>
                             <td>
-                                <a asp-action="Edit" asp-route-id="@cp.Id" class="btn btn-sm btn-warning" title="Edit">
+                                <a asp-action="Edit" asp-route-id="@cp.Id"
+                                   class="btn btn-warning btn-action mr-1" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@cp.Id" method="post" class="d-inline"
-                                      onsubmit="return confirm('Hapus checkpoint @cp.CheckpointName?')">
+                                      onsubmit="return confirmDelete('@cp.CheckpointName.Replace("'","\\'")')">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                    <button type="submit" class="btn btn-danger btn-action" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </td>
                         </tr>
                     }
-                    @if (!Model.Any())
-                    {
-                        <tr><td colspan="8" class="text-center text-muted py-4">Belum ada checkpoint terdaftar</td></tr>
-                    }
                 </tbody>
             </table>
+            @if (!Model.Any())
+            {
+                <div class="empty-state text-center">
+                    <i class="fas fa-map-marked-alt d-block mb-3"></i>
+                    <p class="text-muted font-weight-bold mb-1">Belum ada checkpoint terdaftar</p>
+                    <p class="text-muted small mb-3">Tambahkan checkpoint pertama untuk mulai memantau kunjungan.</p>
+                    <a asp-action="Create" class="btn btn-primary btn-sm px-4">
+                        <i class="fas fa-plus mr-1"></i>Tambah Checkpoint
+                    </a>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    // Client-side search
+    document.getElementById('cpSearch').addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#cpTable tbody tr').forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+
+    // Styled confirm dialog
+    function confirmDelete(name) {
+        return confirm('Hapus checkpoint "' + name + '"?\nTindakan ini tidak dapat dibatalkan.');
+    }
+</script>
+}

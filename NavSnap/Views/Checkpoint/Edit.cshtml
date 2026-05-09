@@ -1,5 +1,174 @@
 @model NavSnap.Models.ViewModels.CheckpointViewModel
 @{
     ViewData["Title"] = "Edit Checkpoint";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-@await Html.PartialAsync("Create", Model)
+<script>document.body.classList.add('pf-page');</script>
+
+@section Styles {
+<style>
+    #pickMap { height: 100%; min-height: 430px; border-radius: 0 0 16px 16px; }
+    .map-hint { display:flex; align-items:center; gap:8px; font-size:.72rem; color:rgba(243,251,255,.4); padding:10px 16px; border-top:1px solid rgba(43,187,216,.16); background:rgba(2,13,23,.5); }
+    .map-hint i { color:rgba(43,187,216,.72); }
+    .leaflet-popup-content-wrapper { background:#0b2033!important; border:1px solid rgba(43,187,216,.3)!important; color:#f3fbff!important; border-radius:10px!important; }
+    .leaflet-popup-tip { background:#0b2033!important; }
+    .leaflet-control-zoom a { background:rgba(2,13,23,.9)!important; border-color:rgba(43,187,216,.3)!important; color:#2bbbd8!important; }
+    .leaflet-control-attribution { background:rgba(2,13,23,.7)!important; color:rgba(243,251,255,.35)!important; font-size:10px!important; }
+    .leaflet-control-attribution a { color:rgba(43,187,216,.72)!important; }
+</style>
+}
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-map-pin"></i></div>
+        <div>
+            <p class="pf-page-title">Edit Checkpoint</p>
+            <p class="pf-page-sub">Perbarui detail lokasi kunjungan sales agar akurat untuk tracking dan radius geofence.</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row">
+    <div class="col-lg-5 mb-4">
+        <div class="prem-card">
+            <div class="prem-card-head">
+                <div class="prem-card-head-ico"><i class="fas fa-edit"></i></div>
+                <h6>Form Edit Checkpoint</h6>
+            </div>
+            <div class="prem-card-body">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+
+                    <div class="pf">
+                        <label>Nama Checkpoint</label>
+                        <input asp-for="CheckpointName" placeholder="Contoh: Toko Mitra Cabang Timur" />
+                        <span asp-validation-for="CheckpointName" class="val-err"></span>
+                    </div>
+
+                    <div class="pf">
+                        <label>Alamat</label>
+                        <textarea asp-for="Address" rows="2" placeholder="Alamat lengkap (opsional)"></textarea>
+                    </div>
+
+                    <div class="pf-div"></div>
+                    <div class="pf-sec"><i class="fas fa-crosshairs"></i>Koordinat GPS</div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="pf">
+                                <label>Latitude</label>
+                                <input asp-for="Latitude" id="inputLat" step="0.000001" />
+                                <span asp-validation-for="Latitude" class="val-err"></span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="pf">
+                                <label>Longitude</label>
+                                <input asp-for="Longitude" id="inputLng" step="0.000001" />
+                                <span asp-validation-for="Longitude" class="val-err"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pf">
+                        <label>Radius Geofence</label>
+                        <div class="pf-grp">
+                            <input asp-for="RadiusMeters" type="number" min="10" max="5000" />
+                            <span class="pf-app"><i class="fas fa-circle-notch mr-1"></i>meter</span>
+                        </div>
+                        <span asp-validation-for="RadiusMeters" class="val-err"></span>
+                        <span class="f-hint">Radius validasi saat sales dianggap tiba di checkpoint.</span>
+                    </div>
+
+                    <div class="pf-div"></div>
+
+                    <div class="pf">
+                        <label class="pf-lbl">Status</label>
+                        <div class="prem-toggle">
+                            <input asp-for="IsActive" type="checkbox" class="prem-toggle-input" id="isActive" />
+                            <label for="isActive" class="prem-toggle-track"><span class="prem-toggle-thumb"></span></label>
+                            <span class="prem-toggle-lbl">Checkpoint Aktif</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="prem-submit">
+                        <i class="fas fa-save"></i>Update Checkpoint
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7 mb-4" style="display:flex;flex-direction:column;">
+        <div class="prem-card" style="flex:1;display:flex;flex-direction:column;">
+            <div class="prem-card-head">
+                <div class="prem-card-head-ico"><i class="fas fa-map"></i></div>
+                <h6>Peta Lokasi Checkpoint &nbsp;<small style="font-weight:400;color:rgba(255,255,255,.3);font-size:.75rem;">— klik atau drag marker</small></h6>
+            </div>
+            <div id="pickMap" style="flex:1;min-height:380px;border-radius:0;"></div>
+            <div class="map-hint">
+                <i class="fas fa-mouse-pointer"></i>
+                Klik peta untuk pindahkan titik, atau drag marker untuk presisi lokasi
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    var initLat = parseFloat(document.getElementById('inputLat').value) || -2.5;
+    var initLng = parseFloat(document.getElementById('inputLng').value) || 117.5;
+    var initZoom = (initLat !== -2.5 || initLng !== 117.5) ? 15 : 5;
+
+    var map = L.map('pickMap').setView([initLat, initLng], initZoom);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+        subdomains: 'abcd', maxZoom: 19
+    }).addTo(map);
+    map.zoomControl.setPosition('bottomright');
+
+    var marker = null;
+    var circle = null;
+    var radius = parseInt(document.querySelector('[name="RadiusMeters"]').value) || 100;
+
+    var pinIcon = L.divIcon({
+        html: '<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0f6b8f,#2bbbd8);border:3px solid rgba(243,251,255,.55);box-shadow:0 0 16px rgba(43,187,216,.55);"></div>',
+        className: '', iconSize: [22,22], iconAnchor: [11,11]
+    });
+
+    function placeMarker(latlng) {
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+        marker = L.marker(latlng, { draggable: true, icon: pinIcon }).addTo(map)
+            .bindPopup('<b style="color:#f3fbff;">Checkpoint</b><br><small style="color:rgba(243,251,255,.6);">' + latlng.lat.toFixed(6) + ', ' + latlng.lng.toFixed(6) + '</small>').openPopup();
+        circle = L.circle(latlng, { radius: radius, color: '#2bbbd8', weight: 1.5, fillColor: '#2bbbd8', fillOpacity: 0.12, dashArray: '4 4' }).addTo(map);
+        document.getElementById('inputLat').value = latlng.lat.toFixed(6);
+        document.getElementById('inputLng').value = latlng.lng.toFixed(6);
+        marker.on('dragend', function(e) { placeMarker(e.target.getLatLng()); });
+    }
+
+    if (initLat !== -2.5 || initLng !== 117.5) placeMarker(L.latLng(initLat, initLng));
+    map.on('click', function(e) { placeMarker(e.latlng); });
+
+    document.querySelector('[name="RadiusMeters"]').addEventListener('input', function() {
+        radius = parseInt(this.value) || 100;
+        if (circle) { map.removeLayer(circle); }
+        if (marker) {
+            circle = L.circle(marker.getLatLng(), { radius: radius, color: '#2bbbd8', weight: 1.5, fillColor: '#2bbbd8', fillOpacity: 0.12, dashArray: '4 4' }).addTo(map);
+        }
+    });
+
+    function updateFromInputs() {
+        var lat = parseFloat(document.getElementById('inputLat').value);
+        var lng = parseFloat(document.getElementById('inputLng').value);
+        if (!isNaN(lat) && !isNaN(lng)) {
+            placeMarker(L.latLng(lat, lng));
+            map.setView([lat, lng], 15);
+        }
+    }
+    document.getElementById('inputLat').addEventListener('change', updateFromInputs);
+    document.getElementById('inputLng').addEventListener('change', updateFromInputs);
+</script>
+}

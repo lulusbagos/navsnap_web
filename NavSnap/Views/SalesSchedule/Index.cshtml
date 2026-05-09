@@ -1,0 +1,343 @@
+@using NavSnap.Models.Entities
+@model NavSnap.Models.ViewModels.SalesScheduleInput
+@{
+    ViewData["Title"] = "Jadwal Kunjungan Sales";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var rows = ViewBag.Rows as List<SalesVisitSchedule> ?? new();
+    var salesList = ViewBag.SalesList as List<User> ?? new();
+    var checkpoints = ViewBag.Checkpoints as List<Checkpoint> ?? new();
+    var selectedUserId = ViewBag.SelectedUserId as int?;
+    var selectedDateFrom = ViewBag.SelectedDateFrom as string ?? "";
+    var selectedDateTo = ViewBag.SelectedDateTo as string ?? "";
+    var routeInsights = ViewBag.RouteInsights as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
+
+    var plannedCount = rows.Count(x => x.Status == "planned");
+    var canceledCount = rows.Count(x => x.Status == "canceled");
+    var salesCovered = rows.Select(x => x.UserId).Distinct().Count();
+    var groupedDays = rows.GroupBy(x => x.ScheduleDate).OrderBy(g => g.Key).ToList();
+}
+<script>document.body.classList.add('pf-page');</script>
+
+@section Styles {
+<style>
+    .sch-kpi-grid { display:grid; gap:.8rem; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:1rem; }
+    .sch-kpi-card { border:1px solid #d8e5f0; border-radius:10px; background:#fff; padding:.8rem .9rem; box-shadow:0 8px 22px rgba(23,35,49,.06); }
+    .sch-kpi-label { margin:0; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:#688097; font-weight:700; }
+    .sch-kpi-value { margin:.25rem 0 0; font-size:1.2rem; font-weight:800; color:#17304a; }
+    .sch-filter { margin-bottom:1rem; }
+    .sch-filter .prem-card-body { padding:14px 16px; }
+    .sch-filter-row { display:grid; gap:.65rem; grid-template-columns:1.1fr .9fr .9fr auto; align-items:end; }
+    .sch-list-card .card-body { background:#fff; }
+    .sch-table thead th { white-space:nowrap; }
+    .sch-badge { border-radius:999px; padding:.2rem .55rem; font-size:.68rem; font-weight:800; letter-spacing:.02em; }
+    .sch-badge-planned { background:rgba(214,155,23,.14); color:#8d6408; }
+    .sch-badge-canceled { background:rgba(217,76,76,.14); color:#9e3131; }
+    .sch-badge-other { background:rgba(43,187,216,.14); color:#0d6b82; }
+    .sch-timeline-day{border:1px solid #dce7ef;border-radius:10px;background:#fff;margin-bottom:.75rem}
+    .sch-timeline-head{display:flex;justify-content:space-between;align-items:center;padding:.65rem .8rem;border-bottom:1px solid #e8eff5;background:#f7fbff}
+    .sch-timeline-title{font-size:.8rem;font-weight:700;color:#17304a;margin:0}
+    .sch-timeline-count{font-size:.72rem;font-weight:700;color:#5f7890}
+    .sch-timeline-item{display:flex;justify-content:space-between;gap:.8rem;padding:.6rem .8rem;border-top:1px dashed #eaf1f6}
+    .sch-timeline-item:first-child{border-top:0}
+    .sch-ti-left{font-size:.8rem;color:#17304a}
+    .sch-ti-sub{font-size:.72rem;color:#6b8298}
+    .sch-score{font-weight:800;color:#17304a}
+    .sch-score-bar{height:8px;border-radius:999px;background:#e8f0f7;overflow:hidden;min-width:84px}
+    .sch-score-fill{height:100%;background:linear-gradient(90deg,#0f6b8f,#2bbbd8)}
+    @@media (max-width: 1199.98px){ .sch-kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @@media (max-width: 991.98px){ .sch-filter-row { grid-template-columns:1fr 1fr; } }
+    @@media (max-width: 575.98px){ .sch-kpi-grid, .sch-filter-row { grid-template-columns:1fr; } }
+</style>
+}
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <p class="pf-page-title">Jadwal Kunjungan Sales</p>
+            <p class="pf-page-sub">Penjadwalan toko harian sales dengan validasi anti dobel kunjungan dan konflik jam.</p>
+        </div>
+    </div>
+    <form asp-action="AutoReassign" method="post" class="d-flex align-items-center" style="gap:.5rem;">
+        @Html.AntiForgeryToken()
+        <input type="date" name="targetDate" class="form-control form-control-sm" style="max-width:160px;" value="@(string.IsNullOrWhiteSpace(selectedDateFrom) ? DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd") : selectedDateFrom)" />
+        <button type="submit" class="btn btn-sm btn-warning">
+            <i class="fas fa-random mr-1"></i>Auto Re-assign
+        </button>
+    </form>
+</div>
+
+<div class="sch-kpi-grid">
+    <div class="sch-kpi-card">
+        <p class="sch-kpi-label">Total Jadwal</p>
+        <p class="sch-kpi-value">@rows.Count</p>
+    </div>
+    <div class="sch-kpi-card">
+        <p class="sch-kpi-label">Planned</p>
+        <p class="sch-kpi-value">@plannedCount</p>
+    </div>
+    <div class="sch-kpi-card">
+        <p class="sch-kpi-label">Canceled</p>
+        <p class="sch-kpi-value">@canceledCount</p>
+    </div>
+    <div class="sch-kpi-card">
+        <p class="sch-kpi-label">Sales Terlibat</p>
+        <p class="sch-kpi-value">@salesCovered</p>
+    </div>
+</div>
+
+<div class="prem-card sch-filter">
+    <div class="prem-card-head">
+        <div class="prem-card-head-ico"><i class="fas fa-filter"></i></div>
+        <h6>Filter Jadwal</h6>
+    </div>
+    <div class="prem-card-body">
+        <form asp-action="Index" method="get" class="sch-filter-row">
+            <div class="pf mb-0">
+                <label>Sales</label>
+                <select name="userId">
+                    <option value="">Semua sales</option>
+                    @foreach (var s in salesList)
+                    {
+                        <option value="@s.Id" selected="@(selectedUserId == s.Id)">@s.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="pf mb-0">
+                <label>Dari Tanggal</label>
+                <input type="date" name="dateFrom" value="@selectedDateFrom" />
+            </div>
+            <div class="pf mb-0">
+                <label>Sampai Tanggal</label>
+                <input type="date" name="dateTo" value="@selectedDateTo" />
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search mr-1"></i>Terapkan</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 mb-4">
+        <div class="prem-card">
+            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-plus-circle"></i></div><h6>Buat Jadwal</h6></div>
+            <div class="prem-card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="pf">
+                        <label>Sales</label>
+                        <select asp-for="UserId" required>
+                            <option value="">Pilih sales</option>
+                            @foreach (var s in salesList)
+                            {
+                                <option value="@s.Id">@s.FullName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="pf">
+                        <label>Toko / Checkpoint</label>
+                        <select asp-for="CheckpointId" required>
+                            <option value="">Pilih toko</option>
+                            @foreach (var c in checkpoints)
+                            {
+                                <option value="@c.Id">@c.CheckpointName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><div class="pf"><label>Dari</label><input asp-for="DateFrom" type="date" required /></div></div>
+                        <div class="col-6"><div class="pf"><label>Sampai</label><input asp-for="DateTo" type="date" required /></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><div class="pf"><label>Jam Mulai</label><input asp-for="StartTime" type="time" required /></div></div>
+                        <div class="col-6"><div class="pf"><label>Jam Selesai</label><input asp-for="EndTime" type="time" required /></div></div>
+                    </div>
+                    <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan Jadwal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-8 mb-4">
+        <div class="card shadow sch-list-card">
+            <div class="card-header panel-head d-flex justify-content-between align-items-center">
+                <h6><i class="fas fa-list-alt mr-2"></i>Daftar Jadwal Kunjungan</h6>
+                <span class="panel-meta">@rows.Count item</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0 sch-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Jam</th>
+                                <th>Sales</th>
+                                <th>Toko</th>
+                                <th>Status</th>
+                                <th class="text-right pr-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!rows.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">Belum ada jadwal pada filter ini.</td></tr>
+                            }
+                            @foreach (var r in rows)
+                            {
+                                <tr>
+                                    <td>@r.ScheduleDate.ToString("dd MMM yyyy")</td>
+                                    <td>@r.StartTime - @r.EndTime</td>
+                                    <td>@r.User.FullName</td>
+                                    <td>@r.Checkpoint.CheckpointName</td>
+                                    <td>
+                                        @if (r.Status == "planned")
+                                        {
+                                            <span class="sch-badge sch-badge-planned">Planned</span>
+                                        }
+                                        else if (r.Status == "canceled")
+                                        {
+                                            <span class="sch-badge sch-badge-canceled">Canceled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="sch-badge sch-badge-other">@r.Status</span>
+                                        }
+                                    </td>
+                                    <td class="text-right pr-3">
+                                        @if (r.Status != "canceled")
+                                        {
+                                            <form asp-action="Cancel" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@r.Id" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">
+                                                    <i class="fas fa-times mr-1"></i>Batalkan
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <div class="card shadow">
+                <div class="card-header panel-head d-flex justify-content-between align-items-center">
+                    <h6><i class="fas fa-stream mr-2"></i>Timeline Jadwal Harian</h6>
+                    <span class="panel-meta">@groupedDays.Count hari</span>
+                </div>
+                <div class="card-body">
+                    @if (!groupedDays.Any())
+                    {
+                        <div class="text-muted text-center py-3">Belum ada timeline untuk filter ini.</div>
+                    }
+                    else
+                    {
+                        @foreach (var day in groupedDays)
+                        {
+                            <div class="sch-timeline-day">
+                                <div class="sch-timeline-head">
+                                    <p class="sch-timeline-title">@day.Key.ToString("dddd, dd MMM yyyy")</p>
+                                    <span class="sch-timeline-count">@day.Count() kunjungan</span>
+                                </div>
+                                @foreach (var item in day.OrderBy(x => x.StartTime))
+                                {
+                                    <div class="sch-timeline-item">
+                                        <div class="sch-ti-left">
+                                            <strong>@item.StartTime - @item.EndTime</strong> · @item.User.FullName
+                                            <div class="sch-ti-sub">@item.Checkpoint.CheckpointName</div>
+                                        </div>
+                                        <div>
+                                            @if (item.Status == "planned")
+                                            {
+                                                <span class="sch-badge sch-badge-planned">Planned</span>
+                                            }
+                                            else if (item.Status == "canceled")
+                                            {
+                                                <span class="sch-badge sch-badge-canceled">Canceled</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="sch-badge sch-badge-other">@item.Status</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="card shadow">
+                <div class="card-header panel-head d-flex justify-content-between align-items-center">
+                    <h6><i class="fas fa-route mr-2"></i>Route Plan vs Actual</h6>
+                    <span class="panel-meta">@routeInsights.Count() rute</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Slot</th>
+                                    <th>Sales</th>
+                                    <th>Toko</th>
+                                    <th>Deviasi Jarak</th>
+                                    <th>Status Rute</th>
+                                    <th>Skor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!routeInsights.Any())
+                                {
+                                    <tr><td colspan="7" class="text-center text-muted py-4">Belum ada data route insight.</td></tr>
+                                }
+                                @foreach (var r in routeInsights)
+                                {
+                                    var score = (int)r.RouteScore;
+                                    var width = Math.Max(0, Math.Min(100, score));
+                                    <tr>
+                                        <td>@r.ScheduleDate.ToString("dd MMM yyyy")</td>
+                                        <td>@r.TimeSlot</td>
+                                        <td>@r.SalesName</td>
+                                        <td>@r.StoreName</td>
+                                        <td>
+                                            @(r.NearestDistanceMeters == null ? "-" : $"{Math.Round((double)r.NearestDistanceMeters)} m")
+                                        </td>
+                                        <td>
+                                            @if (r.VisitStatus == "Arrived")
+                                            {
+                                                <span class="sch-badge sch-badge-planned" style="background:rgba(24,167,122,.15);color:#126747">Arrived</span>
+                                            }
+                                            else if (r.VisitStatus == "Off Route")
+                                            {
+                                                <span class="sch-badge sch-badge-canceled">Off Route</span>
+                                            }
+                                            else if (r.VisitStatus == "On Route")
+                                            {
+                                                <span class="sch-badge sch-badge-other">On Route</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="sch-badge sch-badge-other">@r.VisitStatus</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="gap:.5rem;">
+                                                <div class="sch-score-bar"><div class="sch-score-fill" style="width:@(width)%"></div></div>
+                                                <span class="sch-score">@score</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

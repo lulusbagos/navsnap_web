@@ -4,49 +4,70 @@
     var leaves = ViewBag.Leaves as List<NavSnap.Models.Entities.LeaveRequest> ?? new();
     var overtimes = ViewBag.Overtimes as List<NavSnap.Models.Entities.OvertimeRequest> ?? new();
     var canApprove = User.IsInRole("Administrator") || User.IsInRole("Pengawas");
+    var pendingSupervisor = (int?)ViewBag.PendingSupervisor ?? 0;
+    var pendingHr = (int?)ViewBag.PendingHr ?? 0;
+    var overdueSla = (int?)ViewBag.OverdueSla ?? 0;
 }
+<script>document.body.classList.add('pf-page');</script>
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-user-clock mr-2 text-primary"></i>Izin & Lembur</h1>
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-user-clock"></i></div>
+        <div>
+            <p class="pf-page-title">Izin & Lembur</p>
+            <p class="pf-page-sub">Pengajuan karyawan dan approval atasan dalam satu halaman.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-2">
+    <div class="col-lg-4 mb-3">
+        <div class="kpi-card"><div class="kpi-title">Pending Supervisor</div><div class="kpi-val">@pendingSupervisor</div></div>
+    </div>
+    <div class="col-lg-4 mb-3">
+        <div class="kpi-card"><div class="kpi-title">Pending HR</div><div class="kpi-val">@pendingHr</div></div>
+    </div>
+    <div class="col-lg-4 mb-3">
+        <div class="kpi-card"><div class="kpi-title">Melewati SLA</div><div class="kpi-val">@overdueSla</div></div>
+    </div>
 </div>
 
 <div class="row">
     <div class="col-lg-6 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Pengajuan Izin</h6></div>
-            <div class="card-body">
+        <div class="prem-card">
+            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-calendar-minus"></i></div><h6>Pengajuan Izin</h6></div>
+            <div class="prem-card-body">
                 <form asp-action="SubmitLeave" method="post">
                     @Html.AntiForgeryToken()
-                    <div class="form-group">
-                        <label>Tipe</label>
-                        <select class="form-control" name="LeaveType">
+                    <div class="pf">
+                        <label>Tipe Izin</label>
+                        <select name="LeaveType">
                             <option value="izin">Izin</option>
                             <option value="sakit">Sakit</option>
                             <option value="cuti">Cuti</option>
                         </select>
                     </div>
                     <div class="row">
-                        <div class="col"><div class="form-group"><label>Dari</label><input type="date" class="form-control" name="LeaveDateFrom" required /></div></div>
-                        <div class="col"><div class="form-group"><label>Sampai</label><input type="date" class="form-control" name="LeaveDateTo" required /></div></div>
+                        <div class="col-6"><div class="pf"><label>Dari Tanggal</label><input type="date" name="LeaveDateFrom" required /></div></div>
+                        <div class="col-6"><div class="pf"><label>Sampai Tanggal</label><input type="date" name="LeaveDateTo" required /></div></div>
                     </div>
-                    <div class="form-group"><label>Alasan</label><textarea class="form-control" name="Reason"></textarea></div>
-                    <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Izin</button>
+                    <div class="pf"><label>Alasan</label><textarea name="Reason" rows="3" placeholder="Isi alasan izin..."></textarea></div>
+                    <button type="submit" class="prem-submit"><i class="fas fa-paper-plane"></i>Kirim Izin</button>
                 </form>
             </div>
         </div>
     </div>
+
     <div class="col-lg-6 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Pengajuan Lembur</h6></div>
-            <div class="card-body">
+        <div class="prem-card">
+            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-business-time"></i></div><h6>Pengajuan Lembur</h6></div>
+            <div class="prem-card-body">
                 <form asp-action="SubmitOvertime" method="post">
                     @Html.AntiForgeryToken()
-                    <div class="row">
-                        <div class="col"><div class="form-group"><label>Tanggal</label><input type="date" class="form-control" name="OvertimeDate" required /></div></div>
-                        <div class="col"><div class="form-group"><label>Jam Lembur</label><input type="number" min="0.5" step="0.5" class="form-control" name="Hours" required /></div></div>
-                    </div>
-                    <div class="form-group"><label>Alasan</label><textarea class="form-control" name="Reason"></textarea></div>
-                    <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane mr-1"></i>Kirim Lembur</button>
+                    <div class="pf"><label>Tanggal Lembur</label><input type="date" name="OvertimeDate" required /></div>
+                    <div class="pf"><label>Durasi (Jam)</label><input type="number" min="0.5" step="0.5" name="Hours" placeholder="Contoh: 2.5" required /></div>
+                    <div class="pf"><label>Alasan</label><textarea name="Reason" rows="3" placeholder="Isi alasan lembur..."></textarea></div>
+                    <button type="submit" class="prem-submit"><i class="fas fa-paper-plane"></i>Kirim Lembur</button>
                 </form>
             </div>
         </div>
@@ -56,60 +77,153 @@
 <div class="row">
     <div class="col-lg-6 mb-4">
         <div class="card shadow">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daftar Izin</h6></div>
+            <div class="card-header panel-head d-flex justify-content-between align-items-center">
+                <h6><i class="fas fa-list-alt mr-2"></i>Daftar Izin</h6>
+                <span class="panel-meta">@leaves.Count item</span>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
-                        <thead class="thead-light"><tr><th>Nama</th><th>Periode</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <thead class="thead-light">
+                            <tr><th>Nama</th><th>Periode</th><th>Tipe</th><th>Status</th><th>Tahap</th><th>Aksi</th></tr>
+                        </thead>
                         <tbody>
-                        @foreach (var l in leaves)
-                        {
-                            <tr>
-                                <td>@l.User.FullName</td>
-                                <td>@l.LeaveDateFrom.ToString("dd/MM") - @l.LeaveDateTo.ToString("dd/MM")</td>
-                                <td>@l.LeaveType</td>
-                                <td>@l.Status</td>
-                                <td>
-                                    @if (canApprove && l.Status == "pending")
-                                    {
-                                        <form asp-action="ApproveLeave" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@l.Id" /><button class="btn btn-success btn-sm" name="actionType" value="approve"><i class="fas fa-check"></i></button></form>
-                                        <form asp-action="ApproveLeave" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@l.Id" /><button class="btn btn-danger btn-sm" name="actionType" value="reject"><i class="fas fa-times"></i></button></form>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                        @if (!leaves.Any()) { <tr><td colspan="5" class="text-center text-muted py-3">Belum ada data izin.</td></tr> }
+                            @if (!leaves.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">Belum ada data izin.</td></tr>
+                            }
+                            @foreach (var l in leaves)
+                            {
+                                var isOverdue = (l.Status == "pending_supervisor" || l.Status == "pending_hr") && l.SlaDueAt.HasValue && l.SlaDueAt.Value < DateTime.UtcNow;
+                                <tr>
+                                    <td>@l.User.FullName</td>
+                                    <td>@l.LeaveDateFrom.ToString("dd/MM/yyyy") - @l.LeaveDateTo.ToString("dd/MM/yyyy")</td>
+                                    <td><span class="badge badge-status-completed">@l.LeaveType</span></td>
+                                    <td>
+                                        @if (l.Status == "approved")
+                                        {
+                                            <span class="badge badge-status-arrived">Approved</span>
+                                        }
+                                        else if (l.Status == "rejected")
+                                        {
+                                            <span class="badge badge-status-skipped">Rejected</span>
+                                        }
+                                        else if (l.Status == "pending_hr")
+                                        {
+                                            <span class="badge badge-status-pending">Pending HR</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-status-pending">Pending Spv</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (isOverdue)
+                                        {
+                                            <span class="badge badge-danger">Over SLA</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-light">Tahap @l.ApprovalStage</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if ((User.IsInRole("Pengawas") && l.Status == "pending_supervisor") || (User.IsInRole("Administrator") && (l.Status == "pending_supervisor" || l.Status == "pending_hr")))
+                                        {
+                                            <div class="d-flex" style="gap:.35rem;">
+                                                <form asp-action="ApproveLeave" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@l.Id" />
+                                                    <button class="btn btn-sm btn-outline-success" name="actionType" value="approve" type="submit"><i class="fas fa-check"></i></button>
+                                                </form>
+                                                <form asp-action="ApproveLeave" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@l.Id" />
+                                                    <button class="btn btn-sm btn-outline-danger" name="actionType" value="reject" type="submit"><i class="fas fa-times"></i></button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="col-lg-6 mb-4">
         <div class="card shadow">
-            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Daftar Lembur</h6></div>
+            <div class="card-header panel-head d-flex justify-content-between align-items-center">
+                <h6><i class="fas fa-list-alt mr-2"></i>Daftar Lembur</h6>
+                <span class="panel-meta">@overtimes.Count item</span>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
-                        <thead class="thead-light"><tr><th>Nama</th><th>Tanggal</th><th>Jam</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <thead class="thead-light">
+                            <tr><th>Nama</th><th>Tanggal</th><th>Jam</th><th>Status</th><th>Tahap</th><th>Aksi</th></tr>
+                        </thead>
                         <tbody>
-                        @foreach (var o in overtimes)
-                        {
-                            <tr>
-                                <td>@o.User.FullName</td>
-                                <td>@o.OvertimeDate.ToString("dd/MM/yyyy")</td>
-                                <td>@o.Hours</td>
-                                <td>@o.Status</td>
-                                <td>
-                                    @if (canApprove && o.Status == "pending")
-                                    {
-                                        <form asp-action="ApproveOvertime" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.Id" /><button class="btn btn-success btn-sm" name="actionType" value="approve"><i class="fas fa-check"></i></button></form>
-                                        <form asp-action="ApproveOvertime" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@o.Id" /><button class="btn btn-danger btn-sm" name="actionType" value="reject"><i class="fas fa-times"></i></button></form>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                        @if (!overtimes.Any()) { <tr><td colspan="5" class="text-center text-muted py-3">Belum ada data lembur.</td></tr> }
+                            @if (!overtimes.Any())
+                            {
+                                <tr><td colspan="6" class="text-center text-muted py-4">Belum ada data lembur.</td></tr>
+                            }
+                            @foreach (var o in overtimes)
+                            {
+                                var isOverdue = (o.Status == "pending_supervisor" || o.Status == "pending_hr") && o.SlaDueAt.HasValue && o.SlaDueAt.Value < DateTime.UtcNow;
+                                <tr>
+                                    <td>@o.User.FullName</td>
+                                    <td>@o.OvertimeDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@o.Hours jam</td>
+                                    <td>
+                                        @if (o.Status == "approved")
+                                        {
+                                            <span class="badge badge-status-arrived">Approved</span>
+                                        }
+                                        else if (o.Status == "rejected")
+                                        {
+                                            <span class="badge badge-status-skipped">Rejected</span>
+                                        }
+                                        else if (o.Status == "pending_hr")
+                                        {
+                                            <span class="badge badge-status-pending">Pending HR</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-status-pending">Pending Spv</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (isOverdue)
+                                        {
+                                            <span class="badge badge-danger">Over SLA</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-light">Tahap @o.ApprovalStage</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if ((User.IsInRole("Pengawas") && o.Status == "pending_supervisor") || (User.IsInRole("Administrator") && (o.Status == "pending_supervisor" || o.Status == "pending_hr")))
+                                        {
+                                            <div class="d-flex" style="gap:.35rem;">
+                                                <form asp-action="ApproveOvertime" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@o.Id" />
+                                                    <button class="btn btn-sm btn-outline-success" name="actionType" value="approve" type="submit"><i class="fas fa-check"></i></button>
+                                                </form>
+                                                <form asp-action="ApproveOvertime" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@o.Id" />
+                                                    <button class="btn btn-sm btn-outline-danger" name="actionType" value="reject" type="submit"><i class="fas fa-times"></i></button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
                         </tbody>
                     </table>
                 </div>

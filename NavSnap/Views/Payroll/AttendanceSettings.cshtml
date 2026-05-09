@@ -1,64 +1,365 @@
-@model NavSnap.Models.ViewModels.AttendanceSettingViewModel
+@model NavSnap.Models.ViewModels.AttendanceSettingsPageViewModel
 @{
-    ViewData["Title"] = "Setting Lokasi Absen";
+    ViewData["Title"] = "Lokasi Absensi";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<script>document.body.classList.add('pf-page');</script>
 
-<div class="pf-page-header">
-    <div class="pf-page-header-left">
-        <div class="pf-page-ico"><i class="fas fa-map-marked-alt"></i></div>
+@section Styles {
+<style>
+/* ===== Page Header ===== */
+.as-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem; animation:asFade .4s ease both; }
+.as-header h2 { font-size:1.35rem; font-weight:700; color:#2d3748; margin:0; }
+.as-header span { font-size:.8rem; color:#718096; }
+.as-back { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .9rem; border-radius:9px; background:#f0f2f8; color:#5a6a82; font-size:.8rem; font-weight:600; text-decoration:none; transition:background .15s; }
+.as-back:hover { background:#e2e8f0; text-decoration:none; color:#2d3748; }
+
+/* ===== Cards ===== */
+.as-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.08); animation:asFadeUp .45s ease both; margin-bottom:1.25rem; }
+.as-card:nth-child(2){ animation-delay:.06s }
+.as-card:nth-child(3){ animation-delay:.12s }
+.as-card-header { padding:.9rem 1.25rem; background:linear-gradient(135deg,#1a3a6e,#2d6bc4); display:flex; align-items:center; gap:.6rem; color:#fff; border-radius:14px 14px 0 0; }
+.as-card-header-icon { width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:.85rem; flex-shrink:0; }
+.as-card-header h6 { margin:0; font-size:.9rem; font-weight:700; }
+.as-card-header small { color:rgba(255,255,255,.6); font-size:.72rem; display:block; margin-top:1px; }
+.as-card-body { padding:1.25rem; }
+
+/* ===== Location Table ===== */
+.as-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.as-table th { padding:.6rem 1rem; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#a0aec0; background:#f8f9fc; border-bottom:2px solid #edf0f7; }
+.as-table td { padding:.75rem 1rem; border-bottom:1px solid #f0f2f8; color:#2d3748; vertical-align:middle; }
+.as-table tbody tr:last-child td { border-bottom:none; }
+.as-table tbody tr:hover td { background:#fafbff; }
+
+.as-badge { display:inline-flex; align-items:center; gap:.3rem; font-size:.72rem; font-weight:700; border-radius:20px; padding:.2rem .65rem; }
+.as-badge-active { background:#d1fae5; color:#065f46; }
+.as-badge-inactive { background:#fee2e2; color:#991b1b; }
+.as-badge-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.as-badge-active .as-badge-dot { background:#059669; }
+.as-badge-inactive .as-badge-dot { background:#dc2626; }
+
+.as-ghost-btn { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:1.5px solid; cursor:pointer; background:transparent; font-size:.75rem; transition:all .15s; }
+.as-ghost-green { border-color:#d1fae5; color:#059669; }
+.as-ghost-green:hover { background:#d1fae5; }
+.as-ghost-yellow { border-color:#fef3c7; color:#d97706; }
+.as-ghost-yellow:hover { background:#fef3c7; }
+.as-ghost-red { border-color:#fee2e2; color:#dc2626; }
+.as-ghost-red:hover { background:#fee2e2; }
+
+.as-empty { text-align:center; color:#a0aec0; font-size:.83rem; padding:2rem; }
+
+/* ===== Add Form + Map Layout ===== */
+.as-layout { display:grid; grid-template-columns:360px 1fr; gap:1.25rem; align-items:start; }
+@@media(max-width:960px){ .as-layout{ grid-template-columns:1fr; } }
+
+.as-field { margin-bottom:.9rem; }
+.as-label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5a6a82; margin-bottom:.35rem; }
+.as-input { width:100%; display:block; border:1.5px solid #e2e8f0; border-radius:9px; padding:.5rem .85rem; font-size:.83rem; color:#2d3748; background:#fff; outline:none; transition:border .2s; font-family:inherit; }
+.as-input:focus { border-color:#4e73df; box-shadow:0 0 0 3px rgba(78,115,223,.1); }
+.as-input::placeholder { color:#c0ccd8; }
+
+.as-point-box { border:1.5px solid #e2e8f0; border-radius:9px; padding:.65rem .9rem; min-height:60px; max-height:180px; overflow-y:auto; font-size:.78rem; color:#5a6a82; background:#f8f9fc; line-height:1.7; }
+.as-point-row { display:flex; align-items:center; gap:.35rem; }
+.as-point-num { font-weight:700; color:#4e73df; width:18px; flex-shrink:0; }
+.as-point-coords { color:#2d3748; font-family:monospace; font-size:.76rem; }
+
+.as-divider { height:1px; background:#e2e8f0; margin:.9rem 0; }
+.as-btns { display:flex; gap:.5rem; flex-wrap:wrap; }
+.as-btn-undo { display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .85rem; border-radius:8px; border:1.5px solid #e2e8f0; background:#fff; color:#5a6a82; font-size:.78rem; font-weight:600; cursor:pointer; transition:background .15s; font-family:inherit; }
+.as-btn-undo:hover { background:#f0f2f8; }
+.as-btn-clear { display:inline-flex; align-items:center; gap:.35rem; padding:.45rem .85rem; border-radius:8px; border:1.5px solid #fee2e2; background:#fff; color:#991b1b; font-size:.78rem; font-weight:600; cursor:pointer; transition:background .15s; font-family:inherit; }
+.as-btn-clear:hover { background:#fef2f2; }
+.as-submit { width:100%; display:flex; align-items:center; justify-content:center; gap:.4rem; padding:.6rem 1.2rem; border-radius:9px; border:none; background:linear-gradient(135deg,#4e73df,#224abe); color:#fff; font-size:.85rem; font-weight:700; cursor:pointer; transition:transform .15s, box-shadow .15s; font-family:inherit; margin-top:.75rem; }
+.as-submit:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(78,115,223,.35); }
+
+.as-val-err { font-size:.73rem; color:#e74a3b; display:block; margin-top:.3rem; }
+.as-hint { font-size:.72rem; color:#a0aec0; margin-top:.3rem; }
+
+@@keyframes asFade { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@@keyframes asFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+</style>
+}
+
+<div class="as-header">
+    <div>
+        <h2><i class="fas fa-map-marker-alt mr-2" style="color:#4e73df;"></i>Lokasi Absensi</h2>
+        <span>Kelola area geofence untuk validasi absensi karyawan</span>
+    </div>
+    <a href="/Payroll/Index" class="as-back"><i class="fas fa-arrow-left mr-1"></i>Kembali</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert" style="border-radius:10px;font-size:.83rem;">
+        <i class="fas fa-check-circle mr-1"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Existing Locations Table -->
+<div class="as-card">
+    <div class="as-card-header">
+        <div class="as-card-header-icon"><i class="fas fa-list"></i></div>
         <div>
-            <p class="pf-page-title">Setting Lokasi Absen</p>
-            <p class="pf-page-sub">Tentukan titik dan radius absensi via maps.</p>
+            <h6>Daftar Lokasi Absensi</h6>
+            <small>@Model.Locations.Count lokasi terdaftar &mdash; @Model.Locations.Count(l => l.IsActive) aktif</small>
         </div>
+    </div>
+    <div class="as-card-body" style="padding:0;">
+        @if (!Model.Locations.Any())
+        {
+            <div class="as-empty">
+                <i class="fas fa-map-marker-alt mb-2" style="font-size:2rem;opacity:.25;display:block;"></i>
+                Belum ada lokasi absensi. Tambahkan lokasi baru di bawah ini.
+            </div>
+        }
+        else
+        {
+            <table class="as-table">
+                <thead>
+                    <tr>
+                        <th>Nama Lokasi</th>
+                        <th>Titik Geofence</th>
+                        <th>Status</th>
+                        <th>Dibuat</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var loc in Model.Locations)
+                    {
+                        <tr>
+                            <td>
+                                <strong style="color:#2d3748;">@loc.LocationName</strong>
+                                <div style="font-size:.73rem;color:#a0aec0;margin-top:1px;">
+                                    <i class="fas fa-crosshairs" style="font-size:.65rem;"></i>
+                                    @loc.Latitude.ToString("F5"), @loc.Longitude.ToString("F5")
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-size:.78rem;color:#5a6a82;">
+                                    <i class="fas fa-draw-polygon mr-1" style="color:#4e73df;"></i>@loc.PointCount titik
+                                </span>
+                            </td>
+                            <td>
+                                @if (loc.IsActive)
+                                {
+                                    <span class="as-badge as-badge-active"><span class="as-badge-dot"></span>Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="as-badge as-badge-inactive"><span class="as-badge-dot"></span>Nonaktif</span>
+                                }
+                            </td>
+                            <td style="font-size:.78rem;color:#718096;">@loc.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div style="display:flex;gap:.35rem;align-items:center;">
+                                    <button type="button" class="as-ghost-btn as-ghost-yellow" title="Lihat di Peta" onclick="viewOnMap(@loc.Id)">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                    </button>
+                                    <form method="post" asp-action="ToggleLocation" asp-route-id="@loc.Id" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="as-ghost-btn @(loc.IsActive ? "as-ghost-yellow" : "as-ghost-green")" title="@(loc.IsActive ? "Nonaktifkan" : "Aktifkan")">
+                                            <i class="fas @(loc.IsActive ? "fa-toggle-off" : "fa-toggle-on")"></i>
+                                        </button>
+                                    </form>
+                                    @{ var delMsg = $"Hapus lokasi {loc.LocationName}? Tindakan ini tidak dapat dibatalkan."; }
+                                    <form method="post" asp-action="DeleteLocation" asp-route-id="@loc.Id" style="display:inline;" onsubmit="return confirm('@Html.Raw(delMsg)')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="as-ghost-btn as-ghost-red" title="Hapus">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-5 mb-4">
-        <div class="prem-card">
-            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-sliders-h"></i></div><h6>Form Setting</h6></div>
-            <div class="prem-card-body">
-                <form method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="pf"><label asp-for="LocationName"></label><input asp-for="LocationName" /><span asp-validation-for="LocationName" class="val-err"></span></div>
-                    <div class="row">
-                        <div class="col-md-6"><div class="pf"><label asp-for="Latitude"></label><input asp-for="Latitude" id="latInput" /><span asp-validation-for="Latitude" class="val-err"></span></div></div>
-                        <div class="col-md-6"><div class="pf"><label asp-for="Longitude"></label><input asp-for="Longitude" id="lngInput" /><span asp-validation-for="Longitude" class="val-err"></span></div></div>
-                    </div>
-                    <div class="pf"><label asp-for="RadiusMeters"></label><input asp-for="RadiusMeters" type="number" min="10" /><span asp-validation-for="RadiusMeters" class="val-err"></span></div>
-                    <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
-                </form>
+<!-- Add New Location: Form + Map -->
+<div class="as-layout">
+    <!-- Left: form -->
+    <div class="as-card" style="overflow:hidden;">
+        <div class="as-card-header">
+            <div class="as-card-header-icon"><i class="fas fa-plus"></i></div>
+            <div>
+                <h6>Tambah Lokasi Baru</h6>
+                <small>Gambar area geofence di peta, minimal 3 titik</small>
             </div>
         </div>
+        <div class="as-card-body">
+            <form method="post" id="geoForm">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="as-val-err mb-2"></div>
+
+                <div class="as-field">
+                    <label asp-for="Form.LocationName" class="as-label">Nama Lokasi</label>
+                    <input asp-for="Form.LocationName" class="as-input" placeholder="Contoh: Kantor Pusat" />
+                    <span asp-validation-for="Form.LocationName" class="as-val-err"></span>
+                </div>
+
+                <input asp-for="Form.Latitude" type="hidden" id="latInput" />
+                <input asp-for="Form.Longitude" type="hidden" id="lngInput" />
+                <input asp-for="Form.RadiusMeters" type="hidden" value="100" />
+                <input asp-for="Form.GeofencePoints" type="hidden" id="geofencePointsInput" />
+
+                <div class="as-field">
+                    <label class="as-label">Titik Geofence</label>
+                    <div class="as-point-box" id="pointList">
+                        <span style="color:#a0aec0;">Belum ada titik. Klik peta untuk menambah.</span>
+                    </div>
+                    <span class="as-hint">Klik peta di sebelah kanan untuk menambahkan titik geofence.</span>
+                </div>
+
+                <div class="as-divider"></div>
+
+                <div class="as-btns">
+                    <button type="button" class="as-btn-undo" id="undoPointBtn">
+                        <i class="fas fa-undo mr-1"></i>Hapus Terakhir
+                    </button>
+                    <button type="button" class="as-btn-clear" id="clearPointBtn">
+                        <i class="fas fa-trash-alt mr-1"></i>Reset Semua
+                    </button>
+                </div>
+
+                <button class="as-submit" type="submit">
+                    <i class="fas fa-save mr-1"></i>Simpan Lokasi
+                </button>
+            </form>
+        </div>
     </div>
-    <div class="col-lg-7 mb-4">
-        <div class="prem-card h-100">
-            <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-map"></i></div><h6>Pilih Titik Lokasi</h6></div>
-            <div class="prem-card-body" style="padding:0;">
-                <div id="attMap" style="height:450px;"></div>
+
+    <!-- Right: map -->
+    <div class="as-card">
+        <div class="as-card-header">
+            <div class="as-card-header-icon"><i class="fas fa-map"></i></div>
+            <div>
+                <h6 id="mapTitle">Gambar Area Geofence</h6>
+                <small id="mapSubtitle">Klik pada peta untuk menambah titik</small>
             </div>
+        </div>
+        <div style="border-radius:0 0 14px 14px;overflow:hidden;">
+            <div id="attMap" style="height:520px;"></div>
         </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    var lat = parseFloat(document.getElementById('latInput').value || '-6.2');
-    var lng = parseFloat(document.getElementById('lngInput').value || '106.8');
-    var map = L.map('attMap').setView([lat, lng], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-    var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+(function(){
+    var existingLocations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Locations.Select(l => new {
+        id = l.Id,
+        name = l.LocationName,
+        isActive = l.IsActive,
+        lat = l.Latitude,
+        lng = l.Longitude
+    })));
 
-    function syncLatLng(p) {
-        document.getElementById('latInput').value = p.lat.toFixed(6);
-        document.getElementById('lngInput').value = p.lng.toFixed(6);
-    }
-    marker.on('dragend', function(e){ syncLatLng(e.target.getLatLng()); });
-    map.on('click', function(e){
-        marker.setLatLng(e.latlng);
-        syncLatLng(e.latlng);
+    var points = [];
+
+    var defaultLat = existingLocations.length > 0 ? existingLocations[0].lat : -5.1476;
+    var defaultLng = existingLocations.length > 0 ? existingLocations[0].lng : 119.4327;
+
+    var map = L.map('attMap').setView([defaultLat, defaultLng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+    var newMarkerLayer = L.layerGroup().addTo(map);
+    var newLineLayer   = L.polyline([], { color:'#4e73df', weight:2, dashArray:'6,4' }).addTo(map);
+    var newPolyLayer   = L.polygon([], { color:'#4e73df', weight:2, fillColor:'#6f89e8', fillOpacity:0.2 }).addTo(map);
+    var viewPolyLayer  = L.layerGroup().addTo(map);
+
+    // Render all existing polygons
+    existingLocations.forEach(function(loc){
+        fetchAndDraw(loc, false);
     });
+
+    function fetchAndDraw(loc, fitBounds) {
+        fetch('/Payroll/GetLocationPoints/' + loc.id)
+            .then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(pts){
+                if (!pts || pts.length < 2) return;
+                var color = loc.isActive ? '#059669' : '#a0aec0';
+                var lls = pts.map(function(p){ return [p.lat, p.lng]; });
+                var poly = L.polygon(lls, { color:color, weight:2, fillColor:color, fillOpacity:0.12 })
+                    .addTo(viewPolyLayer)
+                    .bindTooltip(loc.name, { permanent:false, sticky:true });
+                if (fitBounds) { map.fitBounds(lls, { padding:[30,30] }); }
+            })
+            .catch(function(){});
+    }
+
+    function syncHidden() {
+        document.getElementById('geofencePointsInput').value = JSON.stringify(points.map(function(p){ return {lat:p.lat,lng:p.lng}; }));
+        if (points.length > 0) {
+            var cLat = points.reduce(function(s,p){return s+p.lat;},0)/points.length;
+            var cLng = points.reduce(function(s,p){return s+p.lng;},0)/points.length;
+            document.getElementById('latInput').value = cLat.toFixed(6);
+            document.getElementById('lngInput').value = cLng.toFixed(6);
+        } else {
+            document.getElementById('latInput').value = '';
+            document.getElementById('lngInput').value = '';
+        }
+    }
+
+    function renderPointList() {
+        var box = document.getElementById('pointList');
+        if (points.length === 0) {
+            box.innerHTML = '<span style="color:#a0aec0;">Belum ada titik. Klik peta untuk menambah.</span>';
+            return;
+        }
+        box.innerHTML = points.map(function(p,i){
+            return '<div class="as-point-row"><span class="as-point-num">'+(i+1)+'.</span>'
+                 + '<span class="as-point-coords">'+p.lat.toFixed(6)+', '+p.lng.toFixed(6)+'</span></div>';
+        }).join('');
+    }
+
+    function redraw() {
+        newMarkerLayer.clearLayers();
+        var lls = points.map(function(p){return [p.lat,p.lng];});
+        lls.forEach(function(ll,idx){
+            L.circleMarker(ll,{radius:6,color:'#fff',weight:2,fillColor:'#4e73df',fillOpacity:1})
+             .bindTooltip('#'+(idx+1),{permanent:true,direction:'top',offset:[0,-8]})
+             .addTo(newMarkerLayer);
+        });
+        newLineLayer.setLatLngs(lls);
+        newPolyLayer.setLatLngs(lls.length >= 3 ? lls : []);
+        syncHidden();
+        renderPointList();
+    }
+
+    map.on('click', function(e){
+        points.push({lat:e.latlng.lat, lng:e.latlng.lng});
+        redraw();
+    });
+
+    document.getElementById('undoPointBtn').addEventListener('click', function(){
+        if (points.length > 0){ points.pop(); redraw(); }
+    });
+    document.getElementById('clearPointBtn').addEventListener('click', function(){
+        points = []; redraw();
+    });
+    document.getElementById('geoForm').addEventListener('submit', function(e){
+        if (points.length < 3){
+            e.preventDefault();
+            alert('Geofence minimal terdiri dari 3 titik. Klik peta untuk menambah titik.');
+        } else {
+            syncHidden();
+        }
+    });
+
+    redraw();
+
+    window.viewOnMap = function(id) {
+        var loc = existingLocations.find(function(l){ return l.id === id; });
+        if (!loc) return;
+        document.getElementById('mapTitle').textContent = loc.name;
+        document.getElementById('mapSubtitle').textContent = 'Polygon geofence: ' + loc.name;
+        fetchAndDraw(loc, true);
+    };
+})();
 </script>
 }
+

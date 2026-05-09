@@ -26,8 +26,13 @@ namespace NavSnap.Controllers
                 TotalCheckpoints = await _db.Checkpoints.CountAsync(c => c.IsActive),
                 TodayVisits = await _db.SalesVisits.CountAsync(v => v.VisitDate == today),
                 TodayArrived = await _db.SalesVisits.CountAsync(v => v.VisitDate == today && v.Status == "arrived"),
-                TodayPending = await _db.SalesVisits.CountAsync(v => v.VisitDate == today && v.Status == "pending")
+                TodayPending = await _db.SalesVisits.CountAsync(v => v.VisitDate == today && v.Status == "pending"),
+                PendingStoreSubmissions = await _db.StoreSubmissions.CountAsync(s => s.Status == "pending"),
+                PendingLeaveApprovals = await _db.LeaveRequests.CountAsync(l => l.Status == "pending_supervisor" || l.Status == "pending_hr"),
+                PendingOvertimeApprovals = await _db.OvertimeRequests.CountAsync(o => o.Status == "pending_supervisor" || o.Status == "pending_hr")
             };
+            vm.TotalPendingApprovals = vm.PendingStoreSubmissions + vm.PendingLeaveApprovals + vm.PendingOvertimeApprovals;
+            vm.VisitCompletionRate = vm.TodayVisits == 0 ? 0 : Math.Round((double)vm.TodayArrived / vm.TodayVisits * 100, 1);
 
             vm.RecentVisits = await _db.SalesVisits
                 .Include(v => v.User)

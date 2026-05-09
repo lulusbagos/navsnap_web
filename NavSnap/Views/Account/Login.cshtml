@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>Login - NavSnap</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/startbootstrap-sb-admin-2@@4.1.4/vendor/fontawesome-free/css/all.min.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" />
     <style>
         :root {
             --bg: #07111f;
@@ -31,7 +31,7 @@
             width: 100%;
             min-height: 100%;
             margin: 0;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background: var(--bg);
             color: var(--text);
         }
@@ -78,7 +78,7 @@
             width: min(960px, 100%);
             min-height: 560px;
             display: grid;
-            grid-template-columns: 1.02fr .98fr;
+            grid-template-columns: 1.05fr .95fr;
             overflow: hidden;
             border: 1px solid var(--line);
             border-radius: 18px;
@@ -110,8 +110,8 @@
 
         .brand-mark {
             position: relative;
-            width: 76px;
-            height: 76px;
+            width: 84px;
+            height: 84px;
             display: grid;
             place-items: center;
             border-radius: 50%;
@@ -199,7 +199,7 @@
         }
 
         .form-panel {
-            padding: 48px;
+            padding: 52px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -392,7 +392,8 @@
         @@media (max-width: 460px) {
             .login-page { padding: 12px; }
             .brand-panel, .form-panel { padding: 28px 22px; }
-            .brand-mark { width: 64px; height: 64px; }
+            .brand-mark { width: 72px; height: 72px; }
+            .brand-logo-img { width: 50px; height: 50px; }
             .status { font-size: .66rem; }
         }
     </style>
@@ -405,7 +406,7 @@
         <section class="login-shell" aria-label="Login NavSnap">
             <aside class="brand-panel">
                 <div class="brand-mark">
-                    <i class="fas fa-location-arrow"></i>
+                    <img src="/img/navsnap.png" alt="NavSnap Logo" class="brand-logo-img" />
                 </div>
 
                 <div class="brand-copy">
@@ -637,3 +638,9 @@
     </script>
 </body>
 </html>
+        .brand-logo-img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }

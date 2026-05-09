@@ -1,15 +1,16 @@
 @{
     ViewData["Title"] = "Akses Menu - " + (ViewBag.Role as NavSnap.Models.Entities.Role)?.RoleName;
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var role = ViewBag.Role as NavSnap.Models.Entities.Role;
+    var role     = ViewBag.Role     as NavSnap.Models.Entities.Role;
     var allMenus = ViewBag.AllMenus as List<NavSnap.Models.Entities.Menu> ?? new();
     var assigned = ViewBag.Assigned as HashSet<int> ?? new();
-    var rbadge = role?.RoleName == "Administrator" ? "rbadge-admin"
-               : role?.RoleName == "Pengawas" ? "rbadge-pengawas"
-               : role?.RoleName == "Sales" ? "rbadge-sales" : "rbadge-other";
-    var roleId = role?.Id ?? 0;
+    var roleId   = role?.Id ?? 0;
+
+    var rootMenus  = allMenus.Where(m => !m.ParentId.HasValue).OrderBy(m => m.SortOrder).ToList();
+    var childMenus = allMenus.Where(m => m.ParentId.HasValue).GroupBy(m => m.ParentId).ToDictionary(g => g.Key!.Value, g => g.OrderBy(m => m.SortOrder).ToList());
+    int assignedCount = allMenus.Count(m => assigned.Contains(m.Id));
 }
-<script>document.body.classList.add('pf-page');</script>
+
 @if (role == null)
 {
     <div class="alert alert-danger">Role tidak ditemukan.</div>
@@ -17,78 +18,438 @@
     return;
 }
 
-<div class="pf-page-header">
-    <div class="pf-page-header-left">
-        <div class="pf-page-ico"><i class="fas fa-key"></i></div>
-        <div>
-            <p class="pf-page-title">Pengaturan Akses Menu</p>
-            <p class="pf-page-sub">
-                Role: <span class="rbadge @rbadge" style="font-size:.75rem;">@role?.RoleName</span>
-            </p>
-        </div>
+<style>
+/* ── Header ──────────────────────────────── */
+.am-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: amFade .4s ease both;
+}
+.am-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.am-header-left span { font-size: .8rem; color: #718096; }
+
+.am-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .25rem .75rem;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 700;
+    background: #eef2ff;
+    color: #4e73df;
+    border: 1px solid #c7d2fe;
+    margin-left: .5rem;
+}
+
+.am-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem 1rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    background: #f0f4ff;
+    color: #4e73df;
+    border: 1px solid #d0d9ff;
+    text-decoration: none;
+    transition: background .15s;
+}
+.am-btn-back:hover { background: #e2e8ff; color: #4e73df; text-decoration: none; }
+
+/* ── Stats row ───────────────────────────── */
+.am-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.am-stat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    font-size: .82rem;
+    font-weight: 600;
+    color: #2d3748;
+    animation: amFade .4s ease .05s both;
+}
+.am-stat-chip i { color: #4e73df; }
+.am-stat-chip span.sub { color: #a0aec0; font-weight: 400; font-size: .76rem; margin-left: .2rem; }
+
+/* ── Main card ───────────────────────────── */
+.am-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    animation: amFade .45s ease .1s both;
+}
+.am-card-header {
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #1a3a6e, #2d6bc4);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.am-card-title {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .92rem;
+    font-weight: 700;
+}
+.am-header-actions { display: flex; gap: .5rem; }
+.am-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .8rem;
+    border-radius: 7px;
+    font-size: .76rem;
+    font-weight: 600;
+    background: rgba(255,255,255,.12);
+    color: rgba(255,255,255,.85);
+    border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer;
+    transition: background .15s;
+    font-family: inherit;
+}
+.am-btn-ghost:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* ── Menu list ───────────────────────────── */
+.am-menu-list { padding: 1.25rem 1.5rem; }
+
+.am-section { margin-bottom: 1.25rem; }
+.am-section-title {
+    font-size: .73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #a0aec0;
+    margin-bottom: .65rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.am-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.am-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: .5rem;
+}
+.am-sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .4rem;
+    margin-top: .4rem;
+    padding-left: 1.5rem;
+}
+
+/* ── Checkbox item ───────────────────────── */
+.am-check-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem .85rem;
+    border-radius: 9px;
+    border: 1.5px solid #e2e8f0;
+    cursor: pointer;
+    transition: border .15s, background .15s;
+    user-select: none;
+}
+.am-check-item:hover { border-color: #a5b4fc; background: #f5f7ff; }
+.am-check-item.checked { border-color: #4e73df; background: #eef2ff; }
+.am-check-item.child-item {
+    border-color: #e2e8f0;
+    background: #fafbff;
+}
+.am-check-item.child-item.checked { border-color: #6366f1; background: #eef2ff; }
+
+.am-check-box {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid #d1d5db;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s, border .15s;
+}
+.am-check-item.checked .am-check-box {
+    background: #4e73df;
+    border-color: #4e73df;
+}
+.am-check-box i { color: #fff; font-size: .6rem; display: none; }
+.am-check-item.checked .am-check-box i { display: block; }
+
+.am-check-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    flex-shrink: 0;
+    background: #eef2ff;
+    color: #4e73df;
+}
+.am-check-item.child-item .am-check-icon { background: #f3f4f6; color: #6b7280; }
+
+.am-check-lbl { flex: 1; min-width: 0; }
+.am-check-name { font-size: .82rem; font-weight: 600; color: #2d3748; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am-check-url  { font-size: .7rem; color: #a0aec0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Real checkbox hidden */
+.am-real-cb { position: absolute; width:0; height:0; opacity:0; pointer-events:none; }
+
+/* ── Divider ─────────────────────────────── */
+.am-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 1.25rem 0;
+}
+
+/* ── Submit bar ──────────────────────────── */
+.am-submit-bar {
+    padding: 1rem 1.5rem;
+    background: #f8f9fc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.am-counter {
+    font-size: .82rem;
+    color: #718096;
+}
+.am-counter strong { color: #4e73df; }
+
+.am-btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1.5rem;
+    border-radius: 9px;
+    border: none;
+    font-size: .875rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+    font-family: inherit;
+}
+.am-btn-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(78,115,223,.45);
+}
+
+/* ── Animation ───────────────────────────── */
+@@keyframes amFade {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="am-header">
+    <div class="am-header-left">
+        <h2>
+            <i class="fas fa-key mr-2" style="color:#4e73df;"></i>Pengaturan Akses Menu
+            <span class="am-role-chip"><i class="fas fa-user-shield"></i>@role.RoleName</span>
+        </h2>
+        <span>Centang menu yang dapat diakses oleh role ini</span>
     </div>
-    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+    <a asp-action="Index" class="am-btn-back">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
 </div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-7">
-        <div class="prem-card">
-            <div class="prem-card-head" style="justify-content:space-between;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="prem-card-head-ico"><i class="fas fa-bars"></i></div>
-                    <h6>Pilih Menu yang Dapat Diakses</h6>
-                </div>
-                <div style="display:flex;gap:8px;">
-                    <button type="button" class="prem-btn-ghost" onclick="checkAll(true)">
-                        <i class="fas fa-check-double"></i>Pilih Semua
-                    </button>
-                    <button type="button" class="prem-btn-ghost" onclick="checkAll(false)">
-                        <i class="fas fa-times"></i>Hapus Semua
-                    </button>
-                </div>
-            </div>
-            <div class="prem-card-body">
-                <form asp-action="SaveMenuAccess" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="roleId" value="@roleId" />
+<!-- Stats -->
+<div class="am-stats">
+    <div class="am-stat-chip">
+        <i class="fas fa-bars"></i>
+        @allMenus.Count menu tersedia
+    </div>
+    <div class="am-stat-chip">
+        <i class="fas fa-check-circle"></i>
+        <span id="amSelectedCount">@assignedCount</span> menu dipilih
+        <span class="sub">saat ini</span>
+    </div>
+</div>
 
-                    <div class="prem-checks" style="max-height:420px;overflow-y:auto;">
-                        @foreach (var menu in allMenus)
-                        {
-                            var isChecked = assigned.Contains(menu.Id);
-                            var isChild = menu.ParentId.HasValue;
-                            var menuIcon = !string.IsNullOrEmpty(menu.IconClass) ? menu.IconClass
-                                         : isChild ? "fas fa-angle-right" : "fas fa-folder";
-                            <div class="prem-check" style="@(isChild ? "padding-left:20px;" : "")">
-                                <input type="checkbox" class="menu-check"
-                                       id="menu_@menu.Id" name="menuIds" value="@menu.Id"
-                                       @(isChecked ? "checked" : "") />
-                                <label for="menu_@menu.Id">
-                                    <span class="prem-check-box"></span>
-                                    <i class="@menuIcon mr-1" style="color:@(isChild ? "rgba(255,255,255,.3)" : "rgba(33,150,243,.6)");width:14px;text-align:center;"></i>
-                                    <span>@menu.MenuName</span>
-                                    @if (!string.IsNullOrEmpty(menu.MenuUrl) && menu.MenuUrl != "#")
-                                    {<span style="font-size:.72rem;color:rgba(255,255,255,.25);margin-left:4px;">@menu.MenuUrl</span>}
-                                </label>
-                            </div>
-                        }
-                    </div>
-
-                    <div class="pf-div" style="margin-top:20px;"></div>
-
-                    <button type="submit" class="prem-submit">
-                        <i class="fas fa-save"></i>Simpan Pengaturan Akses
-                    </button>
-                </form>
-            </div>
+<!-- Card -->
+<div class="am-card">
+    <div class="am-card-header">
+        <div class="am-card-title">
+            <i class="fas fa-list-check"></i>
+            Daftar Menu Akses
+        </div>
+        <div class="am-header-actions">
+            <button type="button" class="am-btn-ghost" onclick="amCheckAll(true)">
+                <i class="fas fa-check-double"></i>Pilih Semua
+            </button>
+            <button type="button" class="am-btn-ghost" onclick="amCheckAll(false)">
+                <i class="fas fa-times"></i>Hapus Semua
+            </button>
         </div>
     </div>
+
+    <form asp-action="SaveMenuAccess" method="post" id="amForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="roleId" value="@roleId" />
+
+        <div class="am-menu-list">
+            @if (!allMenus.Any())
+            {
+                <p style="text-align:center;color:#a0aec0;padding:2rem 0;">Belum ada menu yang tersedia.</p>
+            }
+
+            @foreach (var menu in rootMenus)
+            {
+                var isChecked = assigned.Contains(menu.Id);
+                var menuIcon = !string.IsNullOrEmpty(menu.IconClass) ? menu.IconClass : "fas fa-folder";
+                var children = childMenus.ContainsKey(menu.Id) ? childMenus[menu.Id] : new();
+
+                <div class="am-section">
+                    <div class="am-section-title">
+                        <i class="@menuIcon"></i>@menu.MenuName
+                    </div>
+                    <div class="am-menu-grid">
+                        <!-- Root menu item -->
+                        <label class="am-check-item @(isChecked ? "checked" : "")" id="item_@menu.Id">
+                            <input type="checkbox" class="am-real-cb menu-check"
+                                   name="menuIds" value="@menu.Id" @(isChecked ? "checked" : "") />
+                            <div class="am-check-box"><i class="fas fa-check"></i></div>
+                            <div class="am-check-icon"><i class="@menuIcon"></i></div>
+                            <div class="am-check-lbl">
+                                <div class="am-check-name">@menu.MenuName</div>
+                                @if (!string.IsNullOrEmpty(menu.MenuUrl) && menu.MenuUrl != "#")
+                                {
+                                    <div class="am-check-url">@menu.MenuUrl</div>
+                                }
+                            </div>
+                        </label>
+                    </div>
+
+                    @if (children.Any())
+                    {
+                        <div class="am-sub-grid">
+                            @foreach (var child in children)
+                            {
+                                var cChecked = assigned.Contains(child.Id);
+                                var cIcon = !string.IsNullOrEmpty(child.IconClass) ? child.IconClass : "fas fa-angle-right";
+                                <label class="am-check-item child-item @(cChecked ? "checked" : "")" id="item_@child.Id">
+                                    <input type="checkbox" class="am-real-cb menu-check"
+                                           name="menuIds" value="@child.Id" @(cChecked ? "checked" : "") />
+                                    <div class="am-check-box"><i class="fas fa-check"></i></div>
+                                    <div class="am-check-icon"><i class="@cIcon"></i></div>
+                                    <div class="am-check-lbl">
+                                        <div class="am-check-name">@child.MenuName</div>
+                                        @if (!string.IsNullOrEmpty(child.MenuUrl) && child.MenuUrl != "#")
+                                        {
+                                            <div class="am-check-url">@child.MenuUrl</div>
+                                        }
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @{
+                // Orphaned children (parent not in allMenus)
+                var orphans = allMenus.Where(m => m.ParentId.HasValue && !allMenus.Any(p => p.Id == m.ParentId.Value)).ToList();
+            }
+            @if (orphans.Any())
+            {
+                <div class="am-section">
+                    <div class="am-section-title"><i class="fas fa-link-slash"></i>Lainnya</div>
+                    <div class="am-menu-grid">
+                        @foreach (var m in orphans)
+                        {
+                            var oc = assigned.Contains(m.Id);
+                            var oi = !string.IsNullOrEmpty(m.IconClass) ? m.IconClass : "fas fa-circle";
+                            <label class="am-check-item @(oc ? "checked" : "")" id="item_@m.Id">
+                                <input type="checkbox" class="am-real-cb menu-check"
+                                       name="menuIds" value="@m.Id" @(oc ? "checked" : "") />
+                                <div class="am-check-box"><i class="fas fa-check"></i></div>
+                                <div class="am-check-icon"><i class="@oi"></i></div>
+                                <div class="am-check-lbl">
+                                    <div class="am-check-name">@m.MenuName</div>
+                                </div>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="am-submit-bar">
+            <div class="am-counter">
+                <strong id="amCountDisplay">@assignedCount</strong> dari @allMenus.Count menu dipilih
+            </div>
+            <button type="submit" class="am-btn-submit">
+                <i class="fas fa-save"></i>Simpan Pengaturan Akses
+            </button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
 <script>
-    function checkAll(val) {
-        document.querySelectorAll('.menu-check').forEach(function(c) { c.checked = val; });
+    // Toggle checked state visually
+    document.querySelectorAll('.menu-check').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            var label = document.getElementById('item_' + this.value);
+            if (label) label.classList.toggle('checked', this.checked);
+            updateCount();
+        });
+    });
+
+    function amCheckAll(val) {
+        document.querySelectorAll('.menu-check').forEach(function (cb) {
+            cb.checked = val;
+            var label = document.getElementById('item_' + cb.value);
+            if (label) label.classList.toggle('checked', val);
+        });
+        updateCount();
+    }
+
+    function updateCount() {
+        var count = document.querySelectorAll('.menu-check:checked').length;
+        var el = document.getElementById('amCountDisplay');
+        var el2 = document.getElementById('amSelectedCount');
+        if (el) el.textContent = count;
+        if (el2) el2.textContent = count;
     }
 </script>
 }
+

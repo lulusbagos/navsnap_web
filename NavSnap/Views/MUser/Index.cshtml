@@ -2,77 +2,450 @@
 @{
     ViewData["Title"] = "User Mobile";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int total    = Model.Count;
+    int aktif    = Model.Count(u => u.Status);
+    int nonaktif = Model.Count(u => !u.Status);
+    int hasFoto  = Model.Count(u => !string.IsNullOrEmpty(u.PathFotoProfile));
+
+    string[] palette = { "#4e73df","#1cc88a","#36b9cc","#f6c23e","#e74a3b","#6f42c1","#fd7e14","#20c9a6" };
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-mobile-alt mr-2 text-primary"></i>User Mobile
-    </h1>
-    <a asp-action="Create" class="btn btn-primary btn-sm">
-        <i class="fas fa-user-plus mr-1"></i>Tambah User Mobile
+<style>
+/* ── Header ──────────────────────────────── */
+.mu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: muFadeDown .4s ease both;
+}
+.mu-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.mu-header-left span { font-size: .8rem; color: #718096; }
+.mu-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1.1rem;
+    border-radius: 8px;
+    font-size: .83rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+}
+.mu-btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(78,115,223,.45); color: #fff; text-decoration: none; }
+
+/* ── Stats ───────────────────────────────── */
+.mu-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@@media (max-width: 900px) { .mu-stats { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 520px)  { .mu-stats { grid-template-columns: 1fr; } }
+
+.mu-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    border-left: 4px solid var(--sc);
+    animation: muFadeUp .45s ease both;
+}
+.mu-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.mu-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.10s }
+.mu-stat:nth-child(3){ --sc:#e74a3b; animation-delay:.15s }
+.mu-stat:nth-child(4){ --sc:#36b9cc; animation-delay:.20s }
+.mu-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--sc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sc);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.mu-stat-val { font-size: 1.5rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+.mu-stat-lbl { font-size: .73rem; color: #718096; margin-top: 2px; }
+
+/* ── Card ────────────────────────────────── */
+.mu-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    animation: muFadeUp .5s ease .2s both;
+}
+.mu-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a3a6e, #2d6bc4);
+    color: #fff;
+}
+.mu-card-title {
+    font-size: .92rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.mu-count-badge {
+    background: rgba(255,255,255,.18);
+    border-radius: 20px;
+    padding: .15rem .55rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.mu-search-wrap { position: relative; flex-shrink: 0; }
+.mu-search-wrap i {
+    position: absolute;
+    left: .7rem; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.6);
+    font-size: .8rem;
+    pointer-events: none;
+}
+.mu-search {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 8px;
+    padding: .4rem .75rem .4rem 2rem;
+    font-size: .8rem;
+    color: #fff;
+    width: 200px;
+    outline: none;
+    transition: background .2s, border .2s;
+}
+.mu-search::placeholder { color: rgba(255,255,255,.5); }
+.mu-search:focus { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+
+/* ── Table ───────────────────────────────── */
+.mu-table-wrap { overflow-x: auto; }
+.mu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+}
+.mu-table thead th {
+    padding: .7rem 1rem;
+    background: #f8f9fc;
+    color: #5a5c69;
+    font-weight: 700;
+    font-size: .73rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #e3e6f0;
+    white-space: nowrap;
+}
+.mu-table tbody tr { border-bottom: 1px solid #f0f2f8; transition: background .15s; }
+.mu-table tbody tr:last-child { border-bottom: none; }
+.mu-table tbody tr:hover { background: #f8f9ff; }
+.mu-table td { padding: .7rem 1rem; vertical-align: middle; color: #3d4a5c; }
+
+/* ── Avatar ──────────────────────────────── */
+.mu-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+.mu-user-cell { display: flex; align-items: center; gap: .6rem; }
+.mu-user-cell strong { font-weight: 600; color: #2d3748; font-size: .83rem; }
+.mu-user-cell small  { color: #a0aec0; font-size: .72rem; }
+
+/* ── NRP chip ────────────────────────────── */
+.mu-nrp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    background: #eef2ff;
+    color: #4e73df;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+/* ── Password mask ───────────────────────── */
+.mu-pwd {
+    font-family: monospace;
+    font-size: .78rem;
+    color: #a0aec0;
+    letter-spacing: .05em;
+}
+
+/* ── Login time ──────────────────────────── */
+.mu-login-cell { font-size: .78rem; }
+.mu-login-cell .date  { color: #2d3748; font-weight: 600; }
+.mu-login-cell .time  { color: #a0aec0; font-size: .72rem; }
+.mu-login-cell .never { color: #c0ccd8; }
+
+/* ── Status ──────────────────────────────── */
+.mu-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .22rem .65rem;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.mu-status-on  { background: #d4edda; color: #155724; }
+.mu-status-off { background: #e2e3e5; color: #565e64; }
+.mu-dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.mu-status-on  .mu-dot { background: #28a745; }
+.mu-status-off .mu-dot { background: #868e96; }
+
+/* ── Foto chip ───────────────────────────── */
+.mu-foto-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 600;
+    background: #e8f4fd;
+    color: #1a6fa8;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Actions ─────────────────────────────── */
+.mu-actions { display: flex; gap: .35rem; align-items: center; }
+.mu-btn-icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: .75rem;
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+}
+.mu-btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+.mu-btn-edit { background: #fff3cd; color: #856404; }
+.mu-btn-del  { background: #f8d7da; color: #842029; }
+
+/* ── Hidden ──────────────────────────────── */
+.mu-hidden { display: none !important; }
+
+/* ── Animations ──────────────────────────── */
+@@keyframes muFadeDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@@keyframes muFadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="mu-header">
+    <div class="mu-header-left">
+        <h2><i class="fas fa-mobile-alt mr-2" style="color:#4e73df;"></i>User Mobile</h2>
+        <span>Kelola akun pengguna aplikasi mobile lapangan</span>
+    </div>
+    <a asp-action="Create" class="mu-btn-add">
+        <i class="fas fa-user-plus"></i> Tambah User Mobile
     </a>
 </div>
 
-<div class="card shadow">
-    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-        <h6 class="m-0 font-weight-bold"><i class="fas fa-table mr-2"></i>Daftar User Mobile (@Model.Count)</h6>
+<!-- Stats -->
+<div class="mu-stats">
+    <div class="mu-stat">
+        <div class="mu-stat-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div><div class="mu-stat-val">@total</div><div class="mu-stat-lbl">Total User Mobile</div></div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="thead-light">
+    <div class="mu-stat">
+        <div class="mu-stat-icon"><i class="fas fa-user-check"></i></div>
+        <div><div class="mu-stat-val">@aktif</div><div class="mu-stat-lbl">User Aktif</div></div>
+    </div>
+    <div class="mu-stat">
+        <div class="mu-stat-icon"><i class="fas fa-user-times"></i></div>
+        <div><div class="mu-stat-val">@nonaktif</div><div class="mu-stat-lbl">Nonaktif</div></div>
+    </div>
+    <div class="mu-stat">
+        <div class="mu-stat-icon"><i class="fas fa-image"></i></div>
+        <div><div class="mu-stat-val">@hasFoto</div><div class="mu-stat-lbl">Punya Foto</div></div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+         style="border-radius:10px;font-size:.84rem;border:none;background:#d4edda;">
+        <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Table card -->
+<div class="mu-card">
+    <div class="mu-card-header">
+        <div class="mu-card-title">
+            <i class="fas fa-table"></i>
+            Daftar User Mobile
+            <span class="mu-count-badge" id="muCountBadge">@total</span>
+        </div>
+        <div class="mu-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" class="mu-search" id="muSearch" placeholder="Cari NRP, username…" />
+        </div>
+    </div>
+    <div class="mu-table-wrap">
+        <table class="mu-table">
+            <thead>
+                <tr>
+                    <th style="width:42px">#</th>
+                    <th>User</th>
+                    <th>NRP</th>
+                    <th>Password</th>
+                    <th>Terakhir Login</th>
+                    <th>Status</th>
+                    <th>Foto Profil</th>
+                    <th style="width:80px">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="muTbody">
+                @{ int no = 1; int ci = 0; }
+                @foreach (var u in Model)
+                {
+                    var color = palette[ci++ % palette.Length];
+                    var initials = u.User.Length >= 2
+                        ? (u.User.Split(' ').Length >= 2
+                            ? u.User.Split(' ')[0][0].ToString().ToUpper() + u.User.Split(' ')[1][0].ToString().ToUpper()
+                            : u.User.Substring(0, 2).ToUpper())
+                        : u.User.ToUpper();
+                    var pwdMask = u.Password.Length > 4 ? new string('•', 6) + u.Password.Substring(u.Password.Length - 2) : new string('•', u.Password.Length);
+
                     <tr>
-                        <th>#</th>
-                        <th>NRP</th>
-                        <th>Username</th>
-                        <th>Password</th>
-                        <th>Terakhir Login</th>
-                        <th>Status</th>
-                        <th>Path Foto Profile</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{
-                        var no = 1;
-                    }
-                    @foreach (var u in Model)
-                    {
-                        <tr>
-                            <td>@no++</td>
-                            <td><strong>@u.Nrp</strong></td>
-                            <td>@u.User</td>
-                            <td class="small text-muted">@u.Password</td>
-                            <td class="small">
-                                @(u.TerakhirLogin.HasValue ? u.TerakhirLogin.Value.ToString("dd/MM/yyyy HH:mm") : "-")
-                            </td>
-                            <td class="text-center">
-                                @if (u.Status)
-                                {
-                                    <span class="badge badge-success">Aktif</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-secondary">Nonaktif</span>
-                                }
-                            </td>
-                            <td class="small text-muted">@(string.IsNullOrEmpty(u.PathFotoProfile) ? "-" : u.PathFotoProfile)</td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@u.Nrp" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                        <td style="color:#a0aec0;font-size:.77rem;font-weight:600;">@no++</td>
+                        <td>
+                            <div class="mu-user-cell">
+                                <div class="mu-avatar" style="background:@color;">@initials</div>
+                                <div>
+                                    <strong>@u.User</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="mu-nrp-chip"><i class="fas fa-id-badge"></i>@u.Nrp</span>
+                        </td>
+                        <td>
+                            <span class="mu-pwd" title="@u.Password">@pwdMask</span>
+                        </td>
+                        <td>
+                            @if (u.TerakhirLogin.HasValue)
+                            {
+                                <div class="mu-login-cell">
+                                    <div class="date">@u.TerakhirLogin.Value.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                                    <div class="time">@u.TerakhirLogin.Value.ToLocalTime().ToString("HH:mm")</div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="mu-login-cell never">Belum pernah</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.Status)
+                            {
+                                <span class="mu-status mu-status-on"><span class="mu-dot"></span>Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="mu-status mu-status-off"><span class="mu-dot"></span>Nonaktif</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(u.PathFotoProfile))
+                            {
+                                <span class="mu-foto-chip" title="@u.PathFotoProfile">
+                                    <i class="fas fa-image"></i>@System.IO.Path.GetFileName(u.PathFotoProfile)
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color:#c0ccd8;font-size:.76rem;">—</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="mu-actions">
+                                <a asp-action="Edit" asp-route-id="@u.Nrp" class="mu-btn-icon mu-btn-edit" title="Edit">
+                                    <i class="fas fa-pen"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@u.Nrp" method="post" class="d-inline"
                                       onsubmit="return confirm('Hapus user mobile NRP @u.Nrp?')">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                    <button type="submit" class="mu-btn-icon mu-btn-del" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (total == 0)
+        {
+            <div style="text-align:center;padding:3rem 1rem;color:#a0aec0;">
+                <i class="fas fa-mobile-alt" style="font-size:2.5rem;display:block;margin-bottom:.75rem;"></i>
+                <p style="font-size:.85rem;">Belum ada data user mobile.</p>
+            </div>
+        }
     </div>
 </div>
+
+<script>
+(function () {
+    var input = document.getElementById('muSearch');
+    var tbody = document.getElementById('muTbody');
+    var badge = document.getElementById('muCountBadge');
+    if (!input) return;
+    input.addEventListener('input', function () {
+        var q = this.value.trim().toLowerCase();
+        var v = 0;
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            var show = !q || row.textContent.toLowerCase().includes(q);
+            row.classList.toggle('mu-hidden', !show);
+            if (show) v++;
+        });
+        badge.textContent = v;
+    });
+})();
+</script>
+

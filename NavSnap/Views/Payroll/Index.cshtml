@@ -1,65 +1,96 @@
 @{
-    ViewData["Title"] = "Payroll";
+    ViewData["Title"] = "Payroll & HRIS";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold"><i class="fas fa-money-check-alt mr-2 text-primary"></i>Payroll & HRIS</h1>
+<style>
+.py-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem; margin-bottom:1.5rem; animation:pyFade .4s ease both; }
+.py-header h2 { font-size:1.35rem; font-weight:700; color:#2d3748; margin:0; }
+.py-header span { font-size:.8rem; color:#718096; }
+
+.py-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem; }
+@@media(max-width:760px){ .py-stats{ grid-template-columns:1fr; } }
+
+.py-stat { background:#fff; border-radius:12px; padding:1rem 1.2rem; display:flex; align-items:center; gap:.9rem; box-shadow:0 2px 8px rgba(0,0,0,.07); border-left:4px solid var(--sc); animation:pyFadeUp .45s ease both; }
+.py-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.py-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.10s }
+.py-stat:nth-child(3){ --sc:#f6c23e; animation-delay:.15s }
+.py-stat-icon { width:40px; height:40px; border-radius:10px; background:color-mix(in srgb,var(--sc) 12%,white); display:flex; align-items:center; justify-content:center; color:var(--sc); font-size:1rem; flex-shrink:0; }
+.py-stat-val { font-size:1.5rem; font-weight:700; color:#2d3748; line-height:1.1; }
+.py-stat-lbl { font-size:.73rem; color:#718096; margin-top:2px; }
+
+.py-nav-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; animation:pyFadeUp .5s ease .25s both; }
+@@media(max-width:760px){ .py-nav-grid{ grid-template-columns:1fr; } }
+
+.py-nav-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.08); overflow:hidden; text-decoration:none; display:block; transition:transform .2s, box-shadow .2s; }
+.py-nav-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,.13); text-decoration:none; }
+.py-nav-card-top { height:6px; background:var(--cc); }
+.py-nav-card:nth-child(1){ --cc:linear-gradient(90deg,#4e73df,#6f89e8); }
+.py-nav-card:nth-child(2){ --cc:linear-gradient(90deg,#1cc88a,#38d9a9); }
+.py-nav-card:nth-child(3){ --cc:linear-gradient(90deg,#f6c23e,#ffd96a); }
+.py-nav-card-body { padding:1.25rem 1.4rem 1.4rem; }
+.py-nav-card-icon { width:44px; height:44px; border-radius:12px; background:color-mix(in srgb,var(--ic) 12%,white); display:flex; align-items:center; justify-content:center; color:var(--ic); font-size:1.1rem; margin-bottom:.9rem; }
+.py-nav-card:nth-child(1) .py-nav-card-icon { --ic:#4e73df; }
+.py-nav-card:nth-child(2) .py-nav-card-icon { --ic:#1cc88a; }
+.py-nav-card:nth-child(3) .py-nav-card-icon { --ic:#f6c23e; }
+.py-nav-card-body h5 { font-size:.95rem; font-weight:700; color:#2d3748; margin:0 0 .4rem; }
+.py-nav-card-body p { font-size:.8rem; color:#718096; margin:0; }
+.py-nav-arrow { display:flex; align-items:center; justify-content:flex-end; margin-top:1rem; font-size:.75rem; font-weight:700; color:#a0aec0; gap:.3rem; transition:color .15s; }
+.py-nav-card:hover .py-nav-arrow { color:#4e73df; }
+
+@@keyframes pyFade { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@@keyframes pyFadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+</style>
+
+<div class="py-header">
+    <div>
+        <h2><i class="fas fa-money-check-alt mr-2" style="color:#4e73df;"></i>Payroll & HRIS</h2>
+        <span>Kelola absensi, izin, lembur, dan pengaturan geofence</span>
+    </div>
 </div>
 
-<div class="row">
-    <div class="col-md-4 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted small mb-2">Absen Hari Ini</h6>
-                <h3 class="mb-0">@ViewBag.TodayPresent</h3>
-                <p class="small text-muted mt-2 mb-0">karyawan check-in</p>
-            </div>
-        </div>
+<div class="py-stats">
+    <div class="py-stat">
+        <div class="py-stat-icon"><i class="fas fa-user-check"></i></div>
+        <div><div class="py-stat-val">@ViewBag.TodayPresent</div><div class="py-stat-lbl">Absen Hari Ini</div></div>
     </div>
-    <div class="col-md-4 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted small mb-2">Izin Pending</h6>
-                <h3 class="mb-0">@ViewBag.PendingLeave</h3>
-                <p class="small text-muted mt-2 mb-0">menunggu approval</p>
-            </div>
-        </div>
+    <div class="py-stat">
+        <div class="py-stat-icon"><i class="fas fa-calendar-times"></i></div>
+        <div><div class="py-stat-val">@ViewBag.PendingLeave</div><div class="py-stat-lbl">Izin Pending</div></div>
     </div>
-    <div class="col-md-4 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted small mb-2">Lembur Pending</h6>
-                <h3 class="mb-0">@ViewBag.PendingOvertime</h3>
-                <p class="small text-muted mt-2 mb-0">menunggu approval</p>
-            </div>
-        </div>
+    <div class="py-stat">
+        <div class="py-stat-icon"><i class="fas fa-clock"></i></div>
+        <div><div class="py-stat-val">@ViewBag.PendingOvertime</div><div class="py-stat-lbl">Lembur Pending</div></div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-4 mb-3">
-        <a href="/Payroll/AttendanceSettings" class="card h-100 d-block text-decoration-none">
-            <div class="card-body">
-                <h5 class="mb-2"><i class="fas fa-map-marked-alt mr-2"></i>Setting Lokasi Absen</h5>
-                <p class="text-muted small mb-0">Atur titik lokasi dan radius valid absensi.</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <a href="/Payroll/AttendanceReport" class="card h-100 d-block text-decoration-none">
-            <div class="card-body">
-                <h5 class="mb-2"><i class="fas fa-file-alt mr-2"></i>Laporan Absen</h5>
-                <p class="text-muted small mb-0">Lihat rekap absen dan unduh ke Excel (CSV).</p>
-            </div>
-        </a>
-    </div>
-    <div class="col-lg-4 mb-3">
-        <a href="/Payroll/LeaveOvertime" class="card h-100 d-block text-decoration-none">
-            <div class="card-body">
-                <h5 class="mb-2"><i class="fas fa-user-clock mr-2"></i>Izin & Lembur</h5>
-                <p class="text-muted small mb-0">Pengajuan dan approval izin / lembur.</p>
-            </div>
-        </a>
-    </div>
+<div class="py-nav-grid">
+    <a href="/Payroll/AttendanceSettings" class="py-nav-card">
+        <div class="py-nav-card-top"></div>
+        <div class="py-nav-card-body">
+            <div class="py-nav-card-icon"><i class="fas fa-map-marked-alt"></i></div>
+            <h5>Setting Lokasi Absen</h5>
+            <p>Atur titik geofence dan radius valid untuk absensi karyawan.</p>
+            <div class="py-nav-arrow">Buka <i class="fas fa-arrow-right"></i></div>
+        </div>
+    </a>
+    <a href="/Payroll/AttendanceReport" class="py-nav-card">
+        <div class="py-nav-card-top"></div>
+        <div class="py-nav-card-body">
+            <div class="py-nav-card-icon"><i class="fas fa-file-alt"></i></div>
+            <h5>Laporan Absen</h5>
+            <p>Lihat rekap absen karyawan dan ekspor ke Excel (CSV).</p>
+            <div class="py-nav-arrow">Buka <i class="fas fa-arrow-right"></i></div>
+        </div>
+    </a>
+    <a href="/Payroll/LeaveOvertime" class="py-nav-card">
+        <div class="py-nav-card-top"></div>
+        <div class="py-nav-card-body">
+            <div class="py-nav-card-icon"><i class="fas fa-user-clock"></i></div>
+            <h5>Izin & Lembur</h5>
+            <p>Pengajuan izin/cuti dan approval lembur karyawan.</p>
+            <div class="py-nav-arrow">Buka <i class="fas fa-arrow-right"></i></div>
+        </div>
+    </a>
 </div>
+

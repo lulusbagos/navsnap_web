@@ -2,56 +2,356 @@
 @{
     ViewData["Title"] = "Manajemen Role";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalRoles  = Model.Count;
+    int activeRoles = Model.Count(r => r.IsActive);
+    int totalUsers  = Model.Sum(r => r.UserRoles.Count);
+    int totalMenus  = Model.Sum(r => r.RoleMenus.Count);
+
+    // per-role accent palette
+    string[] rolePalette = {
+        "#4e73df","#1cc88a","#36b9cc","#f6c23e","#e74a3b","#6f42c1","#fd7e14","#20c9a6"
+    };
+    string[] roleIcons = {
+        "fa-user-shield","fa-crown","fa-eye","fa-user-cog","fa-user-tag","fa-user-graduate","fa-user-tie","fa-user-ninja"
+    };
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-user-shield mr-2 text-primary"></i>Manajemen Role
-    </h1>
-    <a asp-action="Create" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus mr-1"></i>Tambah Role
+<style>
+/* ── Header ──────────────────────────────── */
+.ri-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: riFadeDown .4s ease both;
+}
+.ri-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.ri-header-left span { font-size: .8rem; color: #718096; }
+.ri-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1.1rem;
+    border-radius: 8px;
+    font-size: .83rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+}
+.ri-btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(78,115,223,.45);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── Stats ───────────────────────────────── */
+.ri-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+@@media (max-width: 900px) { .ri-stats { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 520px)  { .ri-stats { grid-template-columns: 1fr; } }
+
+.ri-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    border-left: 4px solid var(--sc);
+    animation: riFadeUp .45s ease both;
+}
+.ri-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.ri-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.1s  }
+.ri-stat:nth-child(3){ --sc:#36b9cc; animation-delay:.15s }
+.ri-stat:nth-child(4){ --sc:#f6c23e; animation-delay:.2s  }
+.ri-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--sc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sc);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.ri-stat-val { font-size: 1.5rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+.ri-stat-lbl { font-size: .73rem; color: #718096; margin-top: 2px; }
+
+/* ── Cards grid ──────────────────────────── */
+.ri-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+@@media (max-width: 1100px) { .ri-grid { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 640px)  { .ri-grid { grid-template-columns: 1fr; } }
+
+/* ── Role card ───────────────────────────── */
+.ri-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform .2s, box-shadow .2s;
+    animation: riFadeUp .5s ease both;
+}
+.ri-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+
+.ri-card-top {
+    padding: 1.25rem 1.25rem .75rem;
+    position: relative;
+    overflow: hidden;
+}
+.ri-card-top::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--rc);
+}
+.ri-card-icon-wrap {
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--rc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--rc);
+    font-size: 1.1rem;
+    margin-bottom: .75rem;
+}
+.ri-card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0 0 .3rem;
+}
+.ri-card-desc {
+    font-size: .78rem;
+    color: #718096;
+    margin: 0;
+    line-height: 1.5;
+    min-height: 2.25rem;
+}
+
+.ri-card-meta {
+    display: flex;
+    gap: .5rem;
+    padding: .75rem 1.25rem;
+    border-top: 1px solid #f0f2f8;
+    border-bottom: 1px solid #f0f2f8;
+    flex-wrap: wrap;
+}
+.ri-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .25rem .65rem;
+    border-radius: 20px;
+    font-size: .73rem;
+    font-weight: 600;
+    background: #f0f4ff;
+    color: #4e73df;
+}
+.ri-meta-chip.green { background: #eafaf1; color: #1a7a4a; }
+
+.ri-status-row {
+    padding: .5rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.ri-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.ri-dot-on  { background: #28a745; }
+.ri-dot-off { background: #868e96; }
+.ri-status-on  { color: #155724; }
+.ri-status-off { color: #565e64; }
+
+.ri-card-footer {
+    margin-top: auto;
+    padding: .85rem 1.25rem;
+    background: #fafbff;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.ri-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .38rem .85rem;
+    border-radius: 7px;
+    font-size: .77rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+}
+.ri-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,.15); text-decoration: none; }
+.ri-btn-access { background: #e8f4fd; color: #1a6fa8; }
+.ri-btn-edit   { background: #fff3cd; color: #856404; }
+.ri-btn-del    { background: #f8d7da; color: #842029; }
+
+/* ── Empty ───────────────────────────────── */
+.ri-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 1rem;
+    color: #a0aec0;
+}
+.ri-empty i { font-size: 3rem; margin-bottom: 1rem; display: block; }
+
+/* ── Animations ──────────────────────────── */
+@@keyframes riFadeDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@@keyframes riFadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="ri-header">
+    <div class="ri-header-left">
+        <h2><i class="fas fa-user-shield mr-2" style="color:#4e73df;"></i>Manajemen Role</h2>
+        <span>Kelola role dan hak akses menu sistem</span>
+    </div>
+    <a asp-action="Create" class="ri-btn-add">
+        <i class="fas fa-plus"></i> Tambah Role
     </a>
 </div>
 
-<div class="row">
+<!-- Stats -->
+<div class="ri-stats">
+    <div class="ri-stat">
+        <div class="ri-stat-icon"><i class="fas fa-layer-group"></i></div>
+        <div>
+            <div class="ri-stat-val">@totalRoles</div>
+            <div class="ri-stat-lbl">Total Role</div>
+        </div>
+    </div>
+    <div class="ri-stat">
+        <div class="ri-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="ri-stat-val">@activeRoles</div>
+            <div class="ri-stat-lbl">Role Aktif</div>
+        </div>
+    </div>
+    <div class="ri-stat">
+        <div class="ri-stat-icon"><i class="fas fa-users"></i></div>
+        <div>
+            <div class="ri-stat-val">@totalUsers</div>
+            <div class="ri-stat-lbl">Total User Assigned</div>
+        </div>
+    </div>
+    <div class="ri-stat">
+        <div class="ri-stat-icon"><i class="fas fa-bars"></i></div>
+        <div>
+            <div class="ri-stat-val">@totalMenus</div>
+            <div class="ri-stat-lbl">Total Akses Menu</div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+         style="border-radius:10px;font-size:.84rem;border:none;background:#d4edda;">
+        <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Cards grid -->
+<div class="ri-grid">
+    @if (!Model.Any())
+    {
+        <div class="ri-empty">
+            <i class="fas fa-user-slash"></i>
+            <p style="font-size:.85rem;">Belum ada data role.</p>
+        </div>
+    }
+    @{int idx = 0;}
     @foreach (var role in Model)
     {
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow h-100">
-                <div class="card-header py-3 d-flex align-items-center justify-content-between"
-                     style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-user-shield mr-2"></i>@role.RoleName
-                    </h6>
-                    @if (role.IsActive)
-                    { <span class="badge badge-light">Aktif</span> }
-                    else
-                    { <span class="badge badge-secondary">Nonaktif</span> }
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">@(role.Description ?? "Tidak ada deskripsi")</p>
-                    <div class="d-flex justify-content-between small text-muted mb-3">
-                        <span><i class="fas fa-users mr-1"></i>@role.UserRoles.Count user</span>
-                        <span><i class="fas fa-bars mr-1"></i>@role.RoleMenus.Count menu</span>
-                    </div>
-                </div>
-                <div class="card-footer bg-white">
-                    <a asp-action="AccessMenu" asp-route-id="@role.Id"
-                       class="btn btn-info btn-sm mr-1" title="Atur Akses Menu">
-                        <i class="fas fa-key mr-1"></i>Akses Menu
-                    </a>
-                    <a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-warning btn-sm mr-1">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline"
-                          onsubmit="return confirm('Hapus role @role.RoleName?')">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </div>
+        var color = rolePalette[idx % rolePalette.Length];
+        var icon  = roleIcons[idx % roleIcons.Length];
+        idx++;
+        var delay = $"{0.08 + idx * 0.06:F2}s";
+    <div class="ri-card" style="--rc:@color;animation-delay:@delay;">
+        <div class="ri-card-top">
+            <div class="ri-card-icon-wrap">
+                <i class="fas @icon"></i>
             </div>
+            <h3 class="ri-card-name">@role.RoleName</h3>
+            <p class="ri-card-desc">@(role.Description ?? "Tidak ada deskripsi.")</p>
         </div>
+        <div class="ri-card-meta">
+            <span class="ri-meta-chip">
+                <i class="fas fa-users"></i>@role.UserRoles.Count user
+            </span>
+            <span class="ri-meta-chip green">
+                <i class="fas fa-bars"></i>@role.RoleMenus.Count menu
+            </span>
+        </div>
+        <div class="ri-status-row">
+            @if (role.IsActive)
+            {
+                <span class="ri-dot ri-dot-on"></span>
+                <span class="ri-status-on">Aktif</span>
+            }
+            else
+            {
+                <span class="ri-dot ri-dot-off"></span>
+                <span class="ri-status-off">Nonaktif</span>
+            }
+        </div>
+        <div class="ri-card-footer">
+            <a asp-action="AccessMenu" asp-route-id="@role.Id" class="ri-btn ri-btn-access">
+                <i class="fas fa-key"></i>Akses Menu
+            </a>
+            <a asp-action="Edit" asp-route-id="@role.Id" class="ri-btn ri-btn-edit">
+                <i class="fas fa-pen"></i>Edit
+            </a>
+            <form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline"
+                  onsubmit="return confirm('Hapus role @role.RoleName?')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="ri-btn ri-btn-del">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
     }
 </div>

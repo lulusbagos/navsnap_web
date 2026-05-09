@@ -2,74 +2,461 @@
 @{
     ViewData["Title"] = "Manajemen Menu";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    int totalMenus  = Model.Count;
+    int activeMenus = Model.Count(m => m.IsActive);
+    int rootMenus   = Model.Count(m => !m.ParentId.HasValue);
+    int childMenus  = Model.Count(m => m.ParentId.HasValue);
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">
-        <i class="fas fa-bars mr-2 text-primary"></i>Manajemen Menu
-    </h1>
-    <a asp-action="Create" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus mr-1"></i>Tambah Menu
+<style>
+/* ── Header ──────────────────────────────── */
+.ma-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1.5rem;
+    animation: maFadeDown .4s ease both;
+}
+.ma-header-left h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+.ma-header-left span { font-size: .8rem; color: #718096; }
+.ma-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1.1rem;
+    border-radius: 8px;
+    font-size: .83rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(78,115,223,.35);
+    transition: transform .15s, box-shadow .15s;
+}
+.ma-btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(78,115,223,.45);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ── Stats ───────────────────────────────── */
+.ma-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@@media (max-width: 900px) { .ma-stats { grid-template-columns: repeat(2,1fr); } }
+@@media (max-width: 520px)  { .ma-stats { grid-template-columns: 1fr; } }
+
+.ma-stat {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.07);
+    border-left: 4px solid var(--sc);
+    animation: maFadeUp .45s ease both;
+}
+.ma-stat:nth-child(1){ --sc:#4e73df; animation-delay:.05s }
+.ma-stat:nth-child(2){ --sc:#1cc88a; animation-delay:.1s  }
+.ma-stat:nth-child(3){ --sc:#36b9cc; animation-delay:.15s }
+.ma-stat:nth-child(4){ --sc:#f6c23e; animation-delay:.2s  }
+.ma-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--sc) 12%, white);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sc);
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.ma-stat-val { font-size: 1.5rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+.ma-stat-lbl { font-size: .73rem; color: #718096; margin-top: 2px; }
+
+/* ── Card ────────────────────────────────── */
+.ma-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    overflow: hidden;
+    animation: maFadeUp .5s ease .2s both;
+}
+.ma-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a3a6e 0%, #2d6bc4 100%);
+    color: #fff;
+}
+.ma-card-title {
+    font-size: .92rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.ma-count-badge {
+    background: rgba(255,255,255,.18);
+    border-radius: 20px;
+    padding: .15rem .55rem;
+    font-size: .75rem;
+    font-weight: 600;
+}
+.ma-search-wrap { position: relative; flex-shrink: 0; }
+.ma-search-wrap i {
+    position: absolute;
+    left: .7rem; top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.6);
+    font-size: .8rem;
+    pointer-events: none;
+}
+.ma-search {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 8px;
+    padding: .4rem .75rem .4rem 2rem;
+    font-size: .8rem;
+    color: #fff;
+    width: 200px;
+    outline: none;
+    transition: background .2s, border .2s;
+}
+.ma-search::placeholder { color: rgba(255,255,255,.5); }
+.ma-search:focus { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); }
+
+/* ── Table ───────────────────────────────── */
+.ma-table-wrap { overflow-x: auto; }
+.ma-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .83rem;
+}
+.ma-table thead th {
+    padding: .7rem 1rem;
+    background: #f8f9fc;
+    color: #5a5c69;
+    font-weight: 700;
+    font-size: .73rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 2px solid #e3e6f0;
+    white-space: nowrap;
+}
+.ma-table tbody tr {
+    border-bottom: 1px solid #f0f2f8;
+    transition: background .15s;
+}
+.ma-table tbody tr:last-child { border-bottom: none; }
+.ma-table tbody tr:hover { background: #f8f9ff; }
+.ma-table td { padding: .7rem 1rem; vertical-align: middle; color: #3d4a5c; }
+
+/* ── Menu name cell ──────────────────────── */
+.ma-menu-cell { display: flex; align-items: center; gap: .6rem; }
+.ma-icon-chip {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #eef2ff;
+    color: #4e73df;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    flex-shrink: 0;
+}
+.ma-child-indent { color: #a0aec0; font-size: .85rem; margin-right: .25rem; }
+.ma-menu-name { font-weight: 600; color: #2d3748; }
+.ma-menu-url  { font-size: .73rem; color: #a0aec0; font-family: monospace; }
+
+/* ── Chips ───────────────────────────────── */
+.ma-sort-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    padding: .15rem .45rem;
+    border-radius: 6px;
+    font-size: .73rem;
+    font-weight: 700;
+    background: #eef2ff;
+    color: #4e73df;
+}
+.ma-parent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .55rem;
+    border-radius: 6px;
+    font-size: .73rem;
+    font-weight: 600;
+    background: #f0f4ff;
+    color: #4e73df;
+}
+.ma-parent-chip.root { background: #fef9e7; color: #b7770d; }
+
+.ma-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .22rem .65rem;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 600;
+}
+.ma-status-on  { background: #d4edda; color: #155724; }
+.ma-status-off { background: #e2e3e5; color: #565e64; }
+.ma-dot { width:6px;height:6px;border-radius:50%;display:inline-block; }
+.ma-status-on  .ma-dot { background:#28a745; }
+.ma-status-off .ma-dot { background:#868e96; }
+
+/* ── Actions ─────────────────────────────── */
+.ma-actions { display: flex; gap: .35rem; align-items: center; }
+.ma-btn-icon {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: .75rem;
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+}
+.ma-btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.15); }
+.ma-btn-edit { background: #fff3cd; color: #856404; }
+.ma-btn-del  { background: #f8d7da; color: #842029; }
+
+/* ── Code tag ────────────────────────────── */
+.ma-code {
+    font-family: monospace;
+    font-size: .72rem;
+    background: #f0f4ff;
+    color: #4e73df;
+    padding: .1rem .35rem;
+    border-radius: 4px;
+}
+
+/* ── Hidden ──────────────────────────────── */
+.ma-hidden { display: none !important; }
+
+/* ── Animations ──────────────────────────── */
+@@keyframes maFadeDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@@keyframes maFadeUp {
+    from { opacity:0; transform:translateY(14px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<!-- Header -->
+<div class="ma-header">
+    <div class="ma-header-left">
+        <h2><i class="fas fa-bars mr-2" style="color:#4e73df;"></i>Manajemen Menu</h2>
+        <span>Kelola navigasi dan struktur menu aplikasi</span>
+    </div>
+    <a asp-action="Create" class="ma-btn-add">
+        <i class="fas fa-plus"></i> Tambah Menu
     </a>
 </div>
 
-<div class="card shadow">
-    <div class="card-header py-3" style="background:linear-gradient(90deg,#1a5fa8,#2196f3);color:white;">
-        <h6 class="m-0 font-weight-bold"><i class="fas fa-list mr-2"></i>Daftar Menu (@Model.Count)</h6>
+<!-- Stats -->
+<div class="ma-stats">
+    <div class="ma-stat">
+        <div class="ma-stat-icon"><i class="fas fa-list"></i></div>
+        <div>
+            <div class="ma-stat-val">@totalMenus</div>
+            <div class="ma-stat-lbl">Total Menu</div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="thead-light">
+    <div class="ma-stat">
+        <div class="ma-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div>
+            <div class="ma-stat-val">@activeMenus</div>
+            <div class="ma-stat-lbl">Menu Aktif</div>
+        </div>
+    </div>
+    <div class="ma-stat">
+        <div class="ma-stat-icon"><i class="fas fa-folder"></i></div>
+        <div>
+            <div class="ma-stat-val">@rootMenus</div>
+            <div class="ma-stat-lbl">Menu Utama</div>
+        </div>
+    </div>
+    <div class="ma-stat">
+        <div class="ma-stat-icon"><i class="fas fa-code-branch"></i></div>
+        <div>
+            <div class="ma-stat-val">@childMenus</div>
+            <div class="ma-stat-lbl">Sub Menu</div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert"
+         style="border-radius:10px;font-size:.84rem;border:none;background:#d4edda;">
+        <i class="fas fa-check-circle mr-2"></i>@TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<!-- Table card -->
+<div class="ma-card">
+    <div class="ma-card-header">
+        <div class="ma-card-title">
+            <i class="fas fa-table"></i>
+            Daftar Menu
+            <span class="ma-count-badge" id="maCountBadge">@totalMenus</span>
+        </div>
+        <div class="ma-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" class="ma-search" id="maSearch" placeholder="Cari nama, URL, icon…" />
+        </div>
+    </div>
+    <div class="ma-table-wrap">
+        <table class="ma-table">
+            <thead>
+                <tr>
+                    <th style="width:42px">#</th>
+                    <th>Nama Menu</th>
+                    <th>Icon Class</th>
+                    <th>Parent</th>
+                    <th style="width:70px">Urutan</th>
+                    <th>Status</th>
+                    <th style="width:80px">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="maTbody">
+                @{ int no = 1; }
+                @foreach (var m in Model)
+                {
                     <tr>
-                        <th>#</th>
-                        <th>Nama Menu</th>
-                        <th>URL</th>
-                        <th>Icon</th>
-                        <th>Parent</th>
-                        <th>Urutan</th>
-                        <th>Status</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @{int no = 1;}
-                    @foreach (var m in Model)
-                    {
-                        <tr>
-                            <td>@no++</td>
-                            <td>
-                                @if (m.ParentId.HasValue)
-                                { <span class="text-muted mr-1">└</span> }
-                                <i class="@(m.IconClass ?? "fas fa-circle") mr-1 text-primary"></i>
-                                <strong>@m.MenuName</strong>
-                            </td>
-                            <td class="small font-monospace text-muted">@(m.MenuUrl ?? "#")</td>
-                            <td class="small"><code>@(m.IconClass ?? "—")</code></td>
-                            <td class="small">@(m.Parent?.MenuName ?? "— (Root)")</td>
-                            <td class="text-center"><span class="badge badge-light border">@m.SortOrder</span></td>
-                            <td class="text-center">
-                                @if (m.IsActive)
-                                { <span class="badge badge-success">Aktif</span> }
-                                else
-                                { <span class="badge badge-secondary">Nonaktif</span> }
-                            </td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
+                        <td style="color:#a0aec0;font-size:.77rem;font-weight:600;">@no++</td>
+                        <td>
+                            <div class="ma-menu-cell">
+                                <div class="ma-icon-chip">
+                                    <i class="@(m.IconClass ?? "fas fa-circle")"></i>
+                                </div>
+                                <div>
+                                    <div class="ma-menu-name">
+                                        @if (m.ParentId.HasValue)
+                                        {
+                                            <span class="ma-child-indent">└</span>
+                                        }
+                                        @m.MenuName
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(m.MenuUrl) && m.MenuUrl != "#")
+                                    {
+                                        <div class="ma-menu-url">@m.MenuUrl</div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(m.IconClass))
+                            {
+                                <span class="ma-code">@m.IconClass</span>
+                            }
+                            else
+                            {
+                                <span style="color:#a0aec0;font-size:.78rem;">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (m.Parent != null)
+                            {
+                                <span class="ma-parent-chip">
+                                    <i class="fas fa-level-up-alt fa-rotate-90" style="font-size:.65rem;"></i>@m.Parent.MenuName
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="ma-parent-chip root">
+                                    <i class="fas fa-home" style="font-size:.65rem;"></i>Root
+                                </span>
+                            }
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="ma-sort-chip">@m.SortOrder</span>
+                        </td>
+                        <td>
+                            @if (m.IsActive)
+                            {
+                                <span class="ma-status ma-status-on">
+                                    <span class="ma-dot"></span>Aktif
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="ma-status ma-status-off">
+                                    <span class="ma-dot"></span>Nonaktif
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="ma-actions">
+                                <a asp-action="Edit" asp-route-id="@m.Id" class="ma-btn-icon ma-btn-edit" title="Edit">
+                                    <i class="fas fa-pen"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"
                                       onsubmit="return confirm('Hapus menu @m.MenuName?')">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-danger">
+                                    <button type="submit" class="ma-btn-icon ma-btn-del" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (totalMenus == 0)
+        {
+            <div style="text-align:center;padding:3rem 1rem;color:#a0aec0;">
+                <i class="fas fa-list-ul" style="font-size:2.5rem;display:block;margin-bottom:.75rem;"></i>
+                <p style="font-size:.85rem;">Belum ada data menu.</p>
+            </div>
+        }
     </div>
 </div>
+
+<script>
+(function () {
+    const input = document.getElementById('maSearch');
+    const tbody = document.getElementById('maTbody');
+    const badge = document.getElementById('maCountBadge');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+        const q = this.value.trim().toLowerCase();
+        let visible = 0;
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            const show = !q || row.textContent.toLowerCase().includes(q);
+            row.classList.toggle('ma-hidden', !show);
+            if (show) visible++;
+        });
+        badge.textContent = visible;
+    });
+})();
+</script>
