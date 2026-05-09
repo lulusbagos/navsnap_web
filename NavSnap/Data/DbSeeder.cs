@@ -735,11 +735,12 @@ namespace NavSnap.Data
             }
 
             // Merge duplicate feature menus by URL to prevent duplicate UI entries.
-            var duplicatedUrlGroups = await db.Menus
+            var duplicatedUrlGroups = (await db.Menus
                 .Where(m => !string.IsNullOrEmpty(m.MenuUrl) && m.MenuUrl != "#")
+                .ToListAsync())
                 .GroupBy(m => m.MenuUrl!)
                 .Where(g => g.Count() > 1)
-                .ToListAsync();
+                .ToList();
             foreach (var grp in duplicatedUrlGroups)
             {
                 var ordered = grp.OrderBy(m => m.Id).ToList();
@@ -768,11 +769,12 @@ namespace NavSnap.Data
             }
 
             // Merge duplicate heading menus (MenuUrl '#') by MenuName.
-            var duplicatedHeadingGroups = await db.Menus
+            var duplicatedHeadingGroups = (await db.Menus
                 .Where(m => m.MenuUrl == "#")
+                .ToListAsync())
                 .GroupBy(m => m.MenuName)
                 .Where(g => g.Count() > 1)
-                .ToListAsync();
+                .ToList();
             foreach (var grp in duplicatedHeadingGroups)
             {
                 var ordered = grp.OrderBy(m => m.Id).ToList();
