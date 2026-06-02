@@ -1,0 +1,69 @@
+@model List<NavSnap.Models.Entities.WorkArrangementRequest>
+@{
+    ViewData["Title"] = "Pengajuan WFH/WFA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var canApprove = User.IsInRole("Administrator") || User.IsInRole("Pengawas");
+    var pendingCount = Model.Count(x => x.Status == "pending");
+    var approvedCount = Model.Count(x => x.Status == "approved");
+    var rejectedCount = Model.Count(x => x.Status == "rejected");
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-laptop-house"></i></div>
+        <div><p class="pf-page-title">Pengajuan WFH/WFA</p><p class="pf-page-sub">Pengajuan kerja remote, approval, dan riwayat status.</p></div>
+    </div>
+    <a asp-action="Create" class="pf-back"><i class="fas fa-plus"></i> Tambah Data</a>
+</div>
+
+<div class="module-stat-grid">
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-inbox"></i></div><div><p class="module-stat-value">@Model.Count</p><p class="module-stat-label">Total Pengajuan</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-clock"></i></div><div><p class="module-stat-value">@pendingCount</p><p class="module-stat-label">Pending</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-check-circle"></i></div><div><p class="module-stat-value">@approvedCount</p><p class="module-stat-label">Approved</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-times-circle"></i></div><div><p class="module-stat-value">@rejectedCount</p><p class="module-stat-label">Rejected</p></div></div>
+</div>
+
+<div class="card module-card shadow">
+    <div class="card-header panel-head d-flex justify-content-between align-items-center"><h6><i class="fas fa-table mr-2"></i>Daftar Pengajuan</h6><span class="panel-meta">@Model.Count item</span></div>
+    <div class="card-body p-0"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+        <thead class="thead-light"><tr><th>User</th><th>Tipe</th><th>Periode</th><th>Lokasi</th><th>Status</th><th>Approver</th><th>Alasan</th><th>Aksi</th></tr></thead>
+        <tbody>
+        @if (!Model.Any()) { <tr><td colspan="8" class="module-empty">Belum ada data.</td></tr> }
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@(row.User?.FullName ?? "-")</td>
+                <td><span class="module-chip">@row.ArrangementType</span></td>
+                <td>@row.WorkDateFrom.ToString("dd/MM/yyyy") - @row.WorkDateTo.ToString("dd/MM/yyyy")</td>
+                <td>@row.Location</td>
+                <td>
+                    @if (row.Status == "approved")
+                    {
+                        <span class="badge badge-status-arrived">approved</span>
+                    }
+                    else if (row.Status == "rejected")
+                    {
+                        <span class="badge badge-status-skipped">rejected</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-status-pending">pending</span>
+                    }
+                </td>
+                <td>@(row.Approver?.FullName ?? "-")</td>
+                <td class="small text-muted">@row.Reason</td>
+                <td><div class="module-actions">
+                    <a asp-action="Edit" asp-route-id="@row.Id" class="btn btn-warning btn-sm"><i class="fas fa-pen"></i></a>
+                    @if (canApprove && row.Status == "pending")
+                    {
+                        <form asp-action="SetStatus" asp-route-id="@row.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="status" value="approved" /><button class="btn btn-success btn-sm" type="submit"><i class="fas fa-check"></i></button></form>
+                        <form asp-action="SetStatus" asp-route-id="@row.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<input type="hidden" name="status" value="rejected" /><button class="btn btn-secondary btn-sm" type="submit"><i class="fas fa-times"></i></button></form>
+                    }
+                    <form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus pengajuan ini?')">@Html.AntiForgeryToken()<button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button></form>
+                </div></td>
+            </tr>
+        }
+        </tbody>
+    </table></div></div>
+</div>

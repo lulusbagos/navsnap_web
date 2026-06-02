@@ -1,0 +1,56 @@
+@model List<NavSnap.Models.Entities.CvMasterSummary>
+@{
+    ViewData["Title"] = "Ringkasan CV";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var avgScore = Model.Any() ? Math.Round(Model.Average(x => x.Score), 1) : 0;
+    var topScore = Model.Any() ? Model.Max(x => x.Score) : 0;
+    var strongCount = Model.Count(x => x.Score >= 85);
+    var reviewCount = Model.Count(x => x.Score >= 70 && x.Score < 85);
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-id-badge"></i></div>
+        <div><p class="pf-page-title">Ringkasan CV</p><p class="pf-page-sub">Ringkasan profil kandidat untuk review cepat.</p></div>
+    </div>
+    <a asp-action="Create" class="pf-back"><i class="fas fa-plus"></i> Tambah Data</a>
+</div>
+
+<div class="module-stat-grid">
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-id-card"></i></div><div><p class="module-stat-value">@Model.Count</p><p class="module-stat-label">Total CV</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-star"></i></div><div><p class="module-stat-value">@topScore</p><p class="module-stat-label">Top Score</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-chart-line"></i></div><div><p class="module-stat-value">@avgScore</p><p class="module-stat-label">Avg Score</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-user-check"></i></div><div><p class="module-stat-value">@strongCount/@reviewCount</p><p class="module-stat-label">Strong/Review</p></div></div>
+</div>
+
+<div class="card module-card shadow">
+    <div class="card-header panel-head d-flex justify-content-between align-items-center"><h6><i class="fas fa-table mr-2"></i>Daftar Ringkasan</h6><span class="panel-meta">@Model.Count item</span></div>
+    <div class="card-body p-0"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+        <thead class="thead-light"><tr><th>Kandidat</th><th>Posisi</th><th>Pendidikan</th><th>Experience</th><th>Skills</th><th>Score</th><th>Summary</th><th>Aksi</th></tr></thead>
+        <tbody>
+        @if (!Model.Any()) { <tr><td colspan="8" class="module-empty">Belum ada data.</td></tr> }
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td><strong>@row.CandidateName</strong></td><td>@row.Position</td><td>@row.LastEducation</td><td>@row.YearsExperience tahun</td><td class="small">@row.Skills</td>
+                <td>
+                    @if (row.Score >= 85)
+                    {
+                        <span class="badge badge-status-arrived">@row.Score</span>
+                    }
+                    else if (row.Score < 70)
+                    {
+                        <span class="badge badge-status-skipped">@row.Score</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-status-pending">@row.Score</span>
+                    }
+                </td><td class="small text-muted">@row.Summary</td>
+                <td><div class="module-actions"><a asp-action="Edit" asp-route-id="@row.Id" class="btn btn-warning btn-sm"><i class="fas fa-pen"></i></a><form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus CV summary ini?')">@Html.AntiForgeryToken()<button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button></form></div></td>
+            </tr>
+        }
+        </tbody>
+    </table></div></div>
+</div>

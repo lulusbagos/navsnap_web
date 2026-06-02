@@ -291,7 +291,7 @@
                         <td>
                             <div class="ar-name-cell">
                                 <div class="ar-avatar" style="background:@avatarColor;">@initials</div>
-                                <span class="ar-name-text">@r.User.FullName</span>
+                                <span class="ar-name-text">@(r.User?.FullName ?? "-")</span>
                             </div>
                         </td>
                         <td>
@@ -332,4 +332,3 @@
         </table>
     </div>
 </div>
-

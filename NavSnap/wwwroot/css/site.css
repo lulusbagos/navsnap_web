@@ -519,6 +519,133 @@ body.pf-page #content-wrapper {
   padding: 22px;
 }
 
+.module-card {
+  overflow: hidden;
+}
+
+.module-card .card-header.panel-head {
+  padding: .9rem 1.1rem;
+  background: linear-gradient(135deg, var(--navsnap-primary-dark), var(--navsnap-primary), var(--navsnap-cyan)) !important;
+  color: #ffffff !important;
+}
+
+.module-card .card-header.panel-head h6 {
+  margin: 0;
+  font-size: .86rem;
+  font-weight: 800;
+}
+
+.panel-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  border-radius: 999px;
+  padding: .25rem .65rem;
+  background: rgba(255, 255, 255, .18);
+  color: #ffffff;
+  font-size: .72rem;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, .22);
+}
+
+.module-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  white-space: nowrap;
+}
+
+.module-actions .btn {
+  width: 31px;
+  height: 31px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 7px;
+}
+
+.module-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #7a8fa0;
+  font-size: .84rem;
+}
+
+.module-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: .18rem .55rem;
+  background: rgba(43, 187, 216, .14);
+  color: #08718a;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.module-form-wrap {
+  max-width: 860px;
+}
+
+.module-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.module-stat-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border: 1px solid var(--navsnap-line);
+  border-radius: 8px;
+  padding: .9rem 1rem;
+  background: #ffffff;
+  box-shadow: var(--navsnap-shadow);
+}
+
+.module-stat-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(15, 107, 143, .10);
+  color: var(--navsnap-primary);
+}
+
+.module-stat-value {
+  margin: 0;
+  color: #17304a;
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.module-stat-label {
+  margin: .12rem 0 0;
+  color: #6b7f91;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+@media (max-width: 991.98px) {
+  .module-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .module-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .pf {
   margin-bottom: 16px;
 }

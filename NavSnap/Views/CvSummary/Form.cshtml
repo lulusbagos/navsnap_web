@@ -1,0 +1,29 @@
+@model NavSnap.Models.Entities.CvMasterSummary
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Ringkasan CV" : "Tambah Ringkasan CV";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-id-badge"></i></div>
+        <div><p class="pf-page-title">@ViewData["Title"]</p><p class="pf-page-sub">Kelola profil kandidat, pengalaman, skills, dan score.</p></div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="prem-card module-form-wrap">
+    <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-edit"></i></div><h6>Form Ringkasan CV</h6></div>
+    <div class="prem-card-body"><form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" /><div asp-validation-summary="All" class="text-danger small"></div>
+        <div class="pf"><label>Kandidat Terkait</label><select asp-for="CandidateId" asp-items="ViewBag.Candidates"><option value="">- Manual -</option></select></div>
+        <div class="pf"><label>Nama Kandidat</label><input asp-for="CandidateName" maxlength="150" required /></div>
+        <div class="row"><div class="col-md-6"><div class="pf"><label>Posisi</label><input asp-for="Position" maxlength="100" /></div></div><div class="col-md-6"><div class="pf"><label>Pendidikan Terakhir</label><input asp-for="LastEducation" maxlength="100" /></div></div></div>
+        <div class="row"><div class="col-md-6"><div class="pf"><label>Years Experience</label><input asp-for="YearsExperience" type="number" min="0" /></div></div><div class="col-md-6"><div class="pf"><label>Score</label><input asp-for="Score" type="number" min="0" max="100" /></div></div></div>
+        <div class="pf"><label>Skills</label><textarea asp-for="Skills" rows="2" maxlength="500"></textarea></div>
+        <div class="pf"><label>Summary</label><textarea asp-for="Summary" rows="4" maxlength="1000"></textarea></div>
+        <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+    </form></div>
+</div>

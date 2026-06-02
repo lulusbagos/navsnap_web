@@ -1,0 +1,35 @@
+@model NavSnap.Models.Entities.PayrollAutoSend
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Kirim Payroll Otomatis" : "Tambah Kirim Payroll Otomatis";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-paper-plane"></i></div>
+        <div>
+            <p class="pf-page-title">@ViewData["Title"]</p>
+            <p class="pf-page-sub">Atur periode, tanggal kirim, dan jumlah penerima payroll.</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="prem-card module-form-wrap">
+    <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-edit"></i></div><h6>Form Payroll</h6></div>
+    <div class="prem-card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="Id" type="hidden" />
+            <div asp-validation-summary="All" class="text-danger small"></div>
+            <div class="pf"><label>Periode Payroll</label><input asp-for="PayrollPeriod" placeholder="2026-06" maxlength="20" required /></div>
+            <div class="pf"><label>Tanggal Kirim</label><input asp-for="SendDate" type="date" /></div>
+            <div class="pf"><label>Status</label><select asp-for="Status"><option>scheduled</option><option>sent</option><option>failed</option><option>cancelled</option></select></div>
+            <div class="pf"><label>Jumlah Penerima</label><input asp-for="RecipientCount" type="number" min="0" /></div>
+            <div class="pf"><label>Catatan</label><textarea asp-for="Notes" rows="3" maxlength="500"></textarea></div>
+            <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+        </form>
+    </div>
+</div>

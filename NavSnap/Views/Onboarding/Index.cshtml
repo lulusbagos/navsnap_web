@@ -1,0 +1,60 @@
+@model List<NavSnap.Models.Entities.OnboardingTask>
+@{
+    ViewData["Title"] = "Onboarding";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var openCount = Model.Count(x => x.Status == "open");
+    var progressCount = Model.Count(x => x.Status == "in_progress");
+    var doneCount = Model.Count(x => x.Status == "done");
+    var blockedCount = Model.Count(x => x.Status == "blocked");
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-people-arrows"></i></div>
+        <div><p class="pf-page-title">Onboarding</p><p class="pf-page-sub">Checklist task onboarding untuk karyawan baru.</p></div>
+    </div>
+    <a asp-action="Create" class="pf-back"><i class="fas fa-plus"></i> Tambah Data</a>
+</div>
+
+<div class="module-stat-grid">
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-door-open"></i></div><div><p class="module-stat-value">@openCount</p><p class="module-stat-label">Open</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-tasks"></i></div><div><p class="module-stat-value">@progressCount</p><p class="module-stat-label">In Progress</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-check-circle"></i></div><div><p class="module-stat-value">@doneCount</p><p class="module-stat-label">Done</p></div></div>
+    <div class="module-stat-card"><div class="module-stat-icon"><i class="fas fa-ban"></i></div><div><p class="module-stat-value">@blockedCount</p><p class="module-stat-label">Blocked</p></div></div>
+</div>
+
+<div class="card module-card shadow">
+    <div class="card-header panel-head d-flex justify-content-between align-items-center"><h6><i class="fas fa-table mr-2"></i>Daftar Task</h6><span class="panel-meta">@Model.Count item</span></div>
+    <div class="card-body p-0"><div class="table-responsive"><table class="table table-sm table-hover mb-0">
+        <thead class="thead-light"><tr><th>Employee</th><th>Kandidat</th><th>Task</th><th>Due Date</th><th>Status</th><th>Owner</th><th>Catatan</th><th>Aksi</th></tr></thead>
+        <tbody>
+        @if (!Model.Any()) { <tr><td colspan="8" class="module-empty">Belum ada data.</td></tr> }
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@row.EmployeeName</td><td>@(row.Candidate?.CandidateName ?? "-")</td><td>@row.TaskName</td><td>@row.DueDate.ToString("dd/MM/yyyy")</td>
+                <td>
+                    @if (row.Status == "done")
+                    {
+                        <span class="badge badge-status-arrived">done</span>
+                    }
+                    else if (row.Status == "blocked")
+                    {
+                        <span class="badge badge-status-skipped">blocked</span>
+                    }
+                    else if (row.Status == "in_progress")
+                    {
+                        <span class="module-chip">in progress</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-status-pending">open</span>
+                    }
+                </td><td>@row.OwnerName</td><td class="small text-muted">@row.Notes</td>
+                <td><div class="module-actions"><a asp-action="Edit" asp-route-id="@row.Id" class="btn btn-warning btn-sm"><i class="fas fa-pen"></i></a><form asp-action="Delete" asp-route-id="@row.Id" method="post" class="d-inline" onsubmit="return confirm('Hapus task onboarding ini?')">@Html.AntiForgeryToken()<button class="btn btn-danger btn-sm" type="submit"><i class="fas fa-trash"></i></button></form></div></td>
+            </tr>
+        }
+        </tbody>
+    </table></div></div>
+</div>

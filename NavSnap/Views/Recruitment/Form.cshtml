@@ -1,0 +1,27 @@
+@model NavSnap.Models.Entities.RecruitmentCandidate
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Kandidat" : "Tambah Kandidat";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-user-plus"></i></div>
+        <div><p class="pf-page-title">@ViewData["Title"]</p><p class="pf-page-sub">Kelola data kandidat, posisi, stage, dan sumber kandidat.</p></div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="prem-card module-form-wrap">
+    <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-edit"></i></div><h6>Form Kandidat</h6></div>
+    <div class="prem-card-body"><form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" /><div asp-validation-summary="All" class="text-danger small"></div>
+        <div class="pf"><label>Nama Kandidat</label><input asp-for="CandidateName" maxlength="150" required /></div>
+        <div class="row"><div class="col-md-6"><div class="pf"><label>Email</label><input asp-for="Email" type="email" maxlength="120" /></div></div><div class="col-md-6"><div class="pf"><label>Phone</label><input asp-for="Phone" maxlength="30" /></div></div></div>
+        <div class="pf"><label>Posisi Dilamar</label><input asp-for="PositionApplied" maxlength="100" /></div>
+        <div class="row"><div class="col-md-4"><div class="pf"><label>Stage</label><select asp-for="Stage"><option>Screening</option><option>Interview HR</option><option>Interview User</option><option>Offering</option><option>Hired</option></select></div></div><div class="col-md-4"><div class="pf"><label>Status</label><select asp-for="Status"><option>active</option><option>hired</option><option>rejected</option><option>hold</option></select></div></div><div class="col-md-4"><div class="pf"><label>Source</label><input asp-for="Source" maxlength="80" /></div></div></div>
+        <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+    </form></div>
+</div>

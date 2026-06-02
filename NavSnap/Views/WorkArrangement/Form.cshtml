@@ -1,0 +1,29 @@
+@model NavSnap.Models.Entities.WorkArrangementRequest
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Pengajuan WFH/WFA" : "Tambah Pengajuan WFH/WFA";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-laptop-house"></i></div>
+        <div><p class="pf-page-title">@ViewData["Title"]</p><p class="pf-page-sub">Isi periode, lokasi kerja, dan alasan pengajuan.</p></div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="prem-card module-form-wrap">
+    <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-edit"></i></div><h6>Form WFH/WFA</h6></div>
+    <div class="prem-card-body"><form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+        @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" /><div asp-validation-summary="All" class="text-danger small"></div>
+        <div class="pf"><label>User</label><select asp-for="UserId" asp-items="ViewBag.Users"></select></div>
+        <div class="pf"><label>Tipe</label><select asp-for="ArrangementType"><option>WFH</option><option>WFA</option></select></div>
+        <div class="row"><div class="col-md-6"><div class="pf"><label>Dari</label><input asp-for="WorkDateFrom" type="date" /></div></div><div class="col-md-6"><div class="pf"><label>Sampai</label><input asp-for="WorkDateTo" type="date" /></div></div></div>
+        <div class="pf"><label>Lokasi</label><input asp-for="Location" maxlength="200" /></div>
+        @if (isEdit) { <div class="pf"><label>Status</label><select asp-for="Status"><option>pending</option><option>approved</option><option>rejected</option></select></div> }
+        <div class="pf"><label>Alasan</label><textarea asp-for="Reason" rows="3" maxlength="500"></textarea></div>
+        <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+    </form></div>
+</div>

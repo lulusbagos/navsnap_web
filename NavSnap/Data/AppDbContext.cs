@@ -26,6 +26,13 @@ namespace NavSnap.Data
         public DbSet<SalesVisitSchedule> SalesVisitSchedules { get; set; }
         public DbSet<GpsLog> GpsLogs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<SalesVisitReport> SalesVisitReports { get; set; }
+        public DbSet<PayrollAutoSend> PayrollAutoSends { get; set; }
+        public DbSet<WorkArrangementRequest> WorkArrangementRequests { get; set; }
+        public DbSet<SalesTargetCompliance> SalesTargetCompliances { get; set; }
+        public DbSet<RecruitmentCandidate> RecruitmentCandidates { get; set; }
+        public DbSet<OnboardingTask> OnboardingTasks { get; set; }
+        public DbSet<CvMasterSummary> CvMasterSummaries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -237,6 +244,52 @@ namespace NavSnap.Data
                 .HasOne(a => a.User)
                 .WithMany()
                 .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<SalesVisitReport>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SalesVisitReport>()
+                .HasOne(r => r.Checkpoint)
+                .WithMany()
+                .HasForeignKey(r => r.CheckpointId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<WorkArrangementRequest>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WorkArrangementRequest>()
+                .HasOne(r => r.Approver)
+                .WithMany()
+                .HasForeignKey(r => r.ApprovedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<SalesTargetCompliance>()
+                .HasIndex(c => new { c.UserId, c.ComplianceDate })
+                .IsUnique();
+
+            modelBuilder.Entity<SalesTargetCompliance>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OnboardingTask>()
+                .HasOne(t => t.Candidate)
+                .WithMany(c => c.OnboardingTasks)
+                .HasForeignKey(t => t.CandidateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<CvMasterSummary>()
+                .HasOne(c => c.Candidate)
+                .WithMany(r => r.CvSummaries)
+                .HasForeignKey(c => c.CandidateId)
                 .OnDelete(DeleteBehavior.SetNull);
         }
     }

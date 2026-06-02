@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profil Fitur NavSnap - Detail</title>
+  <style>
+    body { font-family: Arial, sans-serif; color:#1c2f42; margin:30px; line-height:1.48; }
+    h1,h2,h3 { color:#0f4d78; margin:0 0 8px; }
+    h1 { font-size:28px; margin-bottom:4px; }
+    h2 { font-size:19px; margin-top:20px; border-bottom:1px solid #dce8f2; padding-bottom:4px; }
+    h3 { font-size:15px; margin-top:14px; }
+    p, li, td, th { font-size:12.5px; }
+    .muted { color:#5d768e; font-size:11.5px; }
+    .box { border:1px solid #d7e3ee; border-radius:8px; padding:12px 14px; margin-top:10px; background:#f8fbff; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:10px; }
+    .card { border:1px solid #d7e3ee; border-radius:8px; padding:10px; background:#fff; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th, td { border:1px solid #dce8f2; padding:7px; vertical-align:top; }
+    th { background:#f3f8fd; text-align:left; }
+    .tag { display:inline-block; border:1px solid #bfd6ea; background:#eef6ff; color:#0f4d78; border-radius:99px; padding:2px 8px; font-size:11px; margin-right:5px; }
+    .small { font-size:11.5px; }
+    .brand-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .brand-head img{width:44px;height:44px;object-fit:contain}
+    .sales-pitch{
+      border:1px solid #cfe3f3;
+      background:linear-gradient(135deg,#f3f9ff,#ffffff);
+      border-radius:10px;
+      padding:12px 14px;
+      margin-top:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand-head">
+    <img src="../wwwroot/img/navsnap.png" alt="Logo NavSnap" />
+    <h1>NavSnap - Profil Fitur & Fungsi (Detail)</h1>
+  </div>
+  <div class="muted">Dokumen produk untuk tim sales, pre-sales, dan user bisnis</div>
+
+  <div class="sales-pitch">
+    <strong>Bahasa Sales:</strong><br />
+    NavSnap bukan sekadar aplikasi tracking, tapi <strong>mesin kontrol operasional lapangan end-to-end</strong>.
+    Perusahaan bisa memastikan setiap sales bergerak ke toko yang benar, kunjungan tervalidasi lokasi, dan manajemen
+    punya data real-time untuk keputusan cepat. Dampaknya: produktivitas naik, aktivitas fiktif turun, dan eksekusi
+    tim jadi lebih konsisten dari hari ke hari.
+  </div>
+
+  <div class="box">
+    <strong>Definisi Produk:</strong> NavSnap adalah platform <strong>HRIS Basic + Sales Field Execution</strong> untuk mengelola jadwal,
+    pelacakan lapangan, validasi kunjungan berbasis lokasi, approval operasional, dan analitik kinerja tim sales.
+  </div>
+
+  <h2>1) Tujuan Bisnis Aplikasi</h2>
+  <div class="grid-3">
+    <div class="card"><strong>Kontrol Lapangan</strong><br><span class="small">Memastikan tim sales bergerak sesuai rencana kunjungan dan area kerja.</span></div>
+    <div class="card"><strong>Validasi Aktivitas</strong><br><span class="small">Kunjungan dan absensi tervalidasi lokasi untuk mengurangi aktivitas fiktif.</span></div>
+    <div class="card"><strong>Keputusan Cepat</strong><br><span class="small">Dashboard real-time untuk eksekusi, pembinaan, dan evaluasi harian.</span></div>
+  </div>
+
+  <h2>2) Modul Utama dan Fungsinya</h2>
+
+  <h3>2.1 Dashboard Eksekutif</h3>
+  <ul>
+    <li>KPI operasional: user aktif, checkpoint aktif, kunjungan hari ini, arrived, pending, sales online.</li>
+    <li>Analitik performa sales: target vs realisasi, rata capaian, rating bintang, insight risiko.</li>
+    <li>Quick action untuk akses cepat ke Approval Center, Jadwal Kunjungan, Riwayat, dan Audit Log.</li>
+  </ul>
+
+  <h3>2.2 Tracking Sales (Lokasi & Perjalanan)</h3>
+  <ul>
+    <li>Live tracking posisi sales berdasarkan log GPS terbaru.</li>
+    <li>Route history untuk menelusuri jejak perjalanan dan waktu pergerakan.</li>
+    <li>Perbandingan plan vs actual untuk melihat kepatuhan terhadap rute/jadwal.</li>
+  </ul>
+
+  <h3>2.3 Master Checkpoint / Toko</h3>
+  <ul>
+    <li>Pengelolaan titik toko: nama, alamat, latitude, longitude, radius validasi.</li>
+    <li>Peta checkpoint untuk visualisasi sebaran area layanan.</li>
+    <li>Pondasi scheduling dan validasi kunjungan di lapangan.</li>
+  </ul>
+
+  <h3>2.4 Sales Visit Scheduler</h3>
+  <ul>
+    <li>Penjadwalan kunjungan per sales, tanggal, dan slot waktu.</li>
+    <li>Validasi anti bentrok jam, anti duplikasi toko pada hari yang sama.</li>
+    <li>Auto re-assign jadwal jika sales tidak hadir, dengan kandidat sales terdekat kapasitasnya.</li>
+  </ul>
+
+  <h3>2.5 Approval Center</h3>
+  <ul>
+    <li>Satu pintu approval untuk: pengajuan toko, izin, lembur.</li>
+    <li>Approve pengajuan toko otomatis membuat checkpoint/jadwal/kunjungan wajib.</li>
+    <li>Monitoring backlog approval untuk Supervisor dan Administrator.</li>
+  </ul>
+
+  <h3>2.6 Audit Log</h3>
+  <ul>
+    <li>Mencatat aktivitas penting: approve/reject, create/cancel/reassign jadwal, perubahan operasional.</li>
+    <li>Filter by modul dan periode waktu untuk kontrol internal dan investigasi.</li>
+  </ul>
+
+  <h3>2.7 Payroll / HRIS Basic</h3>
+  <ul>
+    <li>Setting lokasi absensi (geofence beberapa titik/area).</li>
+    <li>Laporan absensi dan export data untuk proses administratif.</li>
+    <li>Izin dan lembur dengan approval bertahap Supervisor -> HR/Admin.</li>
+  </ul>
+
+  <h3>2.8 Scope Modul Tambahan</h3>
+  <ul>
+    <li><strong>Laporan Kunjungan:</strong> CRUD laporan hasil kunjungan sales ke toko/checkpoint, termasuk status, outcome, dan catatan tindak lanjut.</li>
+    <li><strong>Kirim Payroll Otomatis:</strong> jadwal otomatis pengiriman payroll/slip gaji, status pengiriman, jumlah penerima, dan waktu terkirim.</li>
+    <li><strong>Pengajuan WFH/WFA:</strong> pengajuan kerja remote dengan approval Administrator/Pengawas dan riwayat status.</li>
+    <li><strong>Compliance Target:</strong> monitoring target vs actual kunjungan sales dengan status compliant, watch, atau risk.</li>
+    <li><strong>Rekrutmen:</strong> pipeline kandidat dari screening, interview, offering, sampai hired/rejected.</li>
+    <li><strong>Onboarding:</strong> checklist task onboarding untuk kandidat atau karyawan baru.</li>
+    <li><strong>Ringkasan CV:</strong> ringkasan CV kandidat berisi profil, pendidikan, pengalaman, skills, summary, dan score.</li>
+  </ul>
+
+  <h2>3) Fitur Lokasi, GPS, Geofence (Detail)</h2>
+  <table>
+    <thead>
+      <tr><th>Fitur</th><th>Fungsi</th><th>Manfaat Bisnis</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Live Location</td>
+        <td>Melihat posisi sales aktif pada peta real-time.</td>
+        <td>Supervisor cepat tahu posisi tim dan respon jika ada deviasi.</td>
+      </tr>
+      <tr>
+        <td>GPS Check-in Visit</td>
+        <td>Validasi kunjungan saat posisi masuk radius checkpoint.</td>
+        <td>Mengurangi laporan kunjungan fiktif.</td>
+      </tr>
+      <tr>
+        <td>Route History</td>
+        <td>Rekam jejak perjalanan per sales dalam rentang waktu tertentu.</td>
+        <td>Evaluasi efisiensi rute dan produktivitas lapangan.</td>
+      </tr>
+      <tr>
+        <td>Geofence Attendance</td>
+        <td>Membatasi absen hanya pada area kerja yang valid.</td>
+        <td>Meningkatkan kepatuhan kehadiran.</td>
+      </tr>
+      <tr>
+        <td>Plan vs Actual</td>
+        <td>Bandingkan jadwal kunjungan dan posisi aktual di lapangan.</td>
+        <td>Deteksi cepat keterlambatan dan off-route.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4) Alur Operasional End-to-End</h2>
+  <ol>
+    <li>Admin/Pengawas menyiapkan master checkpoint dan target harian.</li>
+    <li>Sales mengajukan toko baru atau menerima jadwal kunjungan terstruktur.</li>
+    <li>Approval Center memproses pengajuan toko/izin/lembur sesuai otorisasi.</li>
+    <li>Sales menjalankan rute; sistem membaca GPS untuk memantau progres.</li>
+    <li>Kunjungan valid tercatat sebagai arrived/completed, beserta bukti laporan.</li>
+    <li>Manajemen memonitor KPI, risiko, dan output harian dari dashboard.</li>
+  </ol>
+
+  <h2>5) Role Pengguna</h2>
+  <table>
+    <thead><tr><th>Role</th><th>Tanggung Jawab</th><th>Akses Utama</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Administrator</td>
+        <td>Pengaturan global, kontrol data, approval final, audit.</td>
+        <td>Semua modul termasuk Control Center dan Audit Log.</td>
+      </tr>
+      <tr>
+        <td>Pengawas</td>
+        <td>Monitoring lapangan, approval operasional, tindak lanjut harian.</td>
+        <td>Dashboard, tracking, scheduler, approval tahap pengawasan.</td>
+      </tr>
+      <tr>
+        <td>Sales/Karyawan</td>
+        <td>Eksekusi kunjungan, pelaporan lapangan, absensi, pengajuan.</td>
+        <td>Kunjungan, jadwal, riwayat, ESS (izin/lembur) via web/mobile.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>6) KPI yang Bisa Dipantau</h2>
+  <div>
+    <span class="tag">Visit Completion Rate</span>
+    <span class="tag">On-time Visit</span>
+    <span class="tag">Pending Visit</span>
+    <span class="tag">Sales Active Ratio</span>
+    <span class="tag">Approval Backlog</span>
+    <span class="tag">Avg Achievement</span>
+  </div>
+  <ul>
+    <li><strong>Visit Completion Rate:</strong> persentase kunjungan selesai terhadap total rencana harian.</li>
+    <li><strong>Sales Active Ratio:</strong> perbandingan sales online vs total sales terdaftar.</li>
+    <li><strong>Approval Backlog:</strong> jumlah item pending yang perlu tindakan atasan.</li>
+  </ul>
+
+  <h2>7) Nilai Tambah untuk Klien</h2>
+  <div class="grid-2">
+    <div class="card">
+      <strong>Operational Excellence</strong>
+      <ul>
+        <li>Eksekusi kunjungan lebih terstruktur.</li>
+        <li>Pengawasan tim lapangan lebih cepat dan objektif.</li>
+        <li>Scheduling dan reassign mengurangi lost visit.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <strong>Governance & Compliance</strong>
+      <ul>
+        <li>Approval terpusat dan terdokumentasi.</li>
+        <li>Audit log untuk jejak keputusan operasional.</li>
+        <li>Data siap ekspor untuk laporan manajemen.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>7.1 Kalimat Jual Siap Pakai</h2>
+  <ul>
+    <li><strong>“NavSnap bantu perusahaan memastikan sales bergerak tepat sasaran, bukan sekadar check-in.”</strong></li>
+    <li><strong>“Dengan validasi GPS dan geofence, kunjungan jadi lebih kredibel dan mudah diaudit.”</strong></li>
+    <li><strong>“Supervisor bisa tahu siapa yang on track, siapa yang perlu intervensi, langsung dari dashboard.”</strong></li>
+    <li><strong>“Satu platform untuk eksekusi sales lapangan + HRIS basic, jadi operasional lebih ringkas.”</strong></li>
+  </ul>
+
+  <h2>8) Kesiapan Integrasi Mobile</h2>
+  <ul>
+    <li>Desain modul mendukung update GPS periodik, absensi, dan ESS mobile.</li>
+    <li>Jadwal kunjungan dan checkpoint siap dikonsumsi aplikasi mobile.</li>
+    <li>Approval dan audit tetap terkonsolidasi di web sebagai command center.</li>
+  </ul>
+
+  <div class="box">
+    <strong>Kesimpulan:</strong> NavSnap membantu perusahaan mengendalikan eksekusi tim lapangan dari
+    perencanaan sampai evaluasi, dengan kombinasi <strong>tracking lokasi, scheduling cerdas, approval operasional,
+    dan analitik manajemen</strong> dalam satu platform.
+  </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+@model NavSnap.Models.Entities.SalesVisitReport
+@{
+    var isEdit = Model.Id > 0;
+    ViewData["Title"] = isEdit ? "Edit Laporan Kunjungan" : "Tambah Laporan Kunjungan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script>document.body.classList.add('pf-page');</script>
+
+<div class="pf-page-header">
+    <div class="pf-page-header-left">
+        <div class="pf-page-ico"><i class="fas fa-clipboard-check"></i></div>
+        <div>
+            <p class="pf-page-title">@ViewData["Title"]</p>
+            <p class="pf-page-sub">Lengkapi data kunjungan dan catatan hasil di lapangan.</p>
+        </div>
+    </div>
+    <a asp-action="Index" class="pf-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="prem-card module-form-wrap">
+    <div class="prem-card-head"><div class="prem-card-head-ico"><i class="fas fa-edit"></i></div><h6>Form Laporan</h6></div>
+    <div class="prem-card-body">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            <input asp-for="Id" type="hidden" />
+            <div asp-validation-summary="All" class="text-danger small"></div>
+            <div class="pf"><label>Sales</label><select asp-for="UserId" asp-items="ViewBag.Users"></select></div>
+            <div class="pf"><label>Checkpoint</label><select asp-for="CheckpointId" asp-items="ViewBag.Checkpoints"></select></div>
+            <div class="pf"><label>Tanggal Laporan</label><input asp-for="ReportDate" type="date" /></div>
+            <div class="pf"><label>Status Kunjungan</label><select asp-for="VisitStatus"><option>completed</option><option>arrived</option><option>pending</option><option>skipped</option></select></div>
+            <div class="pf"><label>Outcome</label><input asp-for="Outcome" maxlength="200" /></div>
+            <div class="pf"><label>Catatan</label><textarea asp-for="Notes" rows="3" maxlength="500"></textarea></div>
+            <button class="prem-submit" type="submit"><i class="fas fa-save"></i>Simpan</button>
+        </form>
+    </div>
+</div>
