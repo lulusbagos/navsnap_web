@@ -718,13 +718,13 @@ namespace NavSnap.Data
                 await db.SaveChangesAsync();
             }
 
-            var payrollMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "#" && (m.MenuName == "Payroll" || m.MenuName == "Payroll & Attendance"));
+            var payrollMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "#" && (m.MenuName == "Payroll" || m.MenuName == "Payroll & Attendance" || m.MenuName == "HR & Payroll"));
             if (payrollMenu == null)
             {
                 var nextSort = (await db.Menus.MaxAsync(m => (int?)m.SortOrder) ?? 0) + 1;
                 payrollMenu = new Menu
                 {
-                    MenuName = "Payroll & Attendance",
+                    MenuName = "HR & Payroll",
                     MenuUrl = "#",
                     IconClass = "fas fa-id-card-alt",
                     SortOrder = nextSort,
@@ -737,17 +737,26 @@ namespace NavSnap.Data
             }
             else
             {
-                payrollMenu.MenuName = "Payroll & Attendance";
+                payrollMenu.MenuName = "HR & Payroll";
                 payrollMenu.IconClass = "fas fa-id-card-alt";
                 payrollMenu.IsActive = true;
                 await db.SaveChangesAsync();
             }
 
-            async Task EnsurePayrollChild(string name, string url, string icon, int order)
+            async Task<Menu> EnsurePayrollChild(string name, string url, string icon, int order)
             {
                 var exists = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == url);
-                if (exists != null) return;
-                await db.Menus.AddAsync(new Menu
+                if (exists != null)
+                {
+                    exists.MenuName = name;
+                    exists.IconClass = icon;
+                    exists.SortOrder = order;
+                    exists.ParentId = payrollMenu!.Id;
+                    exists.IsActive = true;
+                    await db.SaveChangesAsync();
+                    return exists;
+                }
+                var menu = new Menu
                 {
                     MenuName = name,
                     MenuUrl = url,
@@ -756,13 +765,15 @@ namespace NavSnap.Data
                     ParentId = payrollMenu!.Id,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
-                });
+                };
+                await db.Menus.AddAsync(menu);
                 await db.SaveChangesAsync();
+                return menu;
             }
 
-            await EnsurePayrollChild("Setting Lokasi Absen", "/Payroll/AttendanceSettings", "fas fa-map-marked-alt", payrollMenu.SortOrder + 1);
-            await EnsurePayrollChild("Laporan Absen", "/Payroll/AttendanceReport", "fas fa-file-alt", payrollMenu.SortOrder + 2);
-            await EnsurePayrollChild("Izin & Lembur", "/Payroll/LeaveOvertime", "fas fa-user-clock", payrollMenu.SortOrder + 3);
+            var attendanceSettingsMenu = await EnsurePayrollChild("Lokasi Absensi", "/Payroll/AttendanceSettings", "fas fa-map-marked-alt", payrollMenu.SortOrder + 1);
+            var attendanceReportMenu = await EnsurePayrollChild("Laporan Absensi", "/Payroll/AttendanceReport", "fas fa-file-alt", payrollMenu.SortOrder + 2);
+            var leaveOvertimeMenu = await EnsurePayrollChild("Izin & Lembur", "/Payroll/LeaveOvertime", "fas fa-user-clock", payrollMenu.SortOrder + 3);
 
             async Task<Menu> EnsureRootMenu(string name, string url, string icon, int order, params string[] oldNames)
             {
@@ -822,19 +833,29 @@ namespace NavSnap.Data
                 return menu;
             }
 
-            var trackingMenu = await EnsureRootMenu("Sales Tracking", "#", "fas fa-map-marked-alt", 2, "Tracking Sales");
-            var salesReportMenu = await EnsureRootMenu("Sales Report", "#", "fas fa-chart-bar", 5);
-            var salesPlanningMenu = await EnsureRootMenu("Sales Planning", "#", "fas fa-calendar-alt", 8);
-            var talentMenu = await EnsureRootMenu("Talent Management", "#", "fas fa-user-tie", 27);
-            await EnsureChildMenu(trackingMenu, "Live Tracking", "/SalesTracking/Index", "fas fa-satellite-dish", 3);
-            await EnsureChildMenu(trackingMenu, "Riwayat Kunjungan", "/SalesTracking/History", "fas fa-history", 4);
-            var visitReportMenu = await EnsureChildMenu(salesReportMenu, "Laporan Kunjungan", "/SalesVisitReport/Index", "fas fa-clipboard-check", 6);
-            var complianceMenu = await EnsureChildMenu(salesReportMenu, "Compliance Target", "/SalesCompliance/Index", "fas fa-chart-line", 7);
-            var payrollAutoMenu = await EnsureChildMenu(payrollMenu, "Kirim Payroll Otomatis", "/PayrollAutoSend/Index", "fas fa-paper-plane", 22);
-            var workArrangementMenu = await EnsureChildMenu(payrollMenu, "Pengajuan WFH/WFA", "/WorkArrangement/Index", "fas fa-laptop-house", 23);
-            var recruitmentMenu = await EnsureChildMenu(talentMenu, "Rekrutmen", "/Recruitment/Index", "fas fa-user-plus", 28);
-            var onboardingMenu = await EnsureChildMenu(talentMenu, "Onboarding", "/Onboarding/Index", "fas fa-people-arrows", 29);
-            var cvSummaryMenu = await EnsureChildMenu(talentMenu, "Ringkasan CV", "/CvSummary/Index", "fas fa-id-badge", 30);
+            var controlCenterMenu = await EnsureRootMenu("Operational Control", "#", "fas fa-shield-alt", 2, "Control Center");
+            var trackingMenu = await EnsureRootMenu("Field Operations", "#", "fas fa-map-marked-alt", 5, "Tracking Sales", "Sales Tracking");
+            var salesReportMenu = await EnsureRootMenu("Sales Reports", "#", "fas fa-chart-bar", 8, "Sales Report");
+            var salesPlanningMenu = await EnsureRootMenu("Sales Planning", "#", "fas fa-calendar-alt", 11);
+            var checkpointMenu = await EnsureRootMenu("Checkpoint & Territory", "#", "fas fa-map-pin", 14, "Checkpoint");
+            var talentMenu = await EnsureRootMenu("Talent Management", "#", "fas fa-user-tie", 23);
+            var appSettingsMenu = await EnsureRootMenu("Application Settings", "#", "fas fa-cogs", 27, "Administrasi");
+            var liveTrackingMenu = await EnsureChildMenu(trackingMenu, "Live Tracking", "/SalesTracking/Index", "fas fa-satellite-dish", 6);
+            var visitHistoryMenu = await EnsureChildMenu(trackingMenu, "Riwayat Kunjungan", "/SalesTracking/History", "fas fa-history", 7);
+            var visitReportMenu = await EnsureChildMenu(salesReportMenu, "Laporan Kunjungan", "/SalesVisitReport/Index", "fas fa-clipboard-check", 9);
+            var complianceMenu = await EnsureChildMenu(salesReportMenu, "Compliance Target", "/SalesCompliance/Index", "fas fa-chart-line", 10);
+            var checkpointListMenu = await EnsureChildMenu(checkpointMenu, "Daftar Checkpoint", "/Checkpoint/Index", "fas fa-list", 15);
+            var checkpointMapMenu = await EnsureChildMenu(checkpointMenu, "Peta Checkpoint", "/Checkpoint/Map", "fas fa-map", 16);
+            var payrollAutoMenu = await EnsureChildMenu(payrollMenu, "Kirim Payroll Otomatis", "/PayrollAutoSend/Index", "fas fa-paper-plane", 21);
+            var workArrangementMenu = await EnsureChildMenu(payrollMenu, "Pengajuan WFH/WFA", "/WorkArrangement/Index", "fas fa-laptop-house", 22);
+            var recruitmentMenu = await EnsureChildMenu(talentMenu, "Rekrutmen", "/Recruitment/Index", "fas fa-user-plus", 24);
+            var onboardingMenu = await EnsureChildMenu(talentMenu, "Onboarding", "/Onboarding/Index", "fas fa-people-arrows", 25);
+            var cvSummaryMenu = await EnsureChildMenu(talentMenu, "Ringkasan CV", "/CvSummary/Index", "fas fa-id-badge", 26);
+            var webUserMenu = await EnsureChildMenu(appSettingsMenu, "User Web", "/User/Index", "fas fa-users", 28);
+            var mobileUserMenu = await EnsureChildMenu(appSettingsMenu, "User Mobile", "/MUser/Index", "fas fa-mobile-alt", 29);
+            var roleMenu = await EnsureChildMenu(appSettingsMenu, "Role & Permission", "/Role/Index", "fas fa-user-shield", 30);
+            var accessMenu = await EnsureChildMenu(appSettingsMenu, "Akses Role Menu", "/Role/AccessMenu", "fas fa-key", 31);
+            var menuBuilderMenu = await EnsureChildMenu(appSettingsMenu, "Menu Builder", "/MenuAdmin/Index", "fas fa-bars", 32);
 
             var scheduleMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "/SalesSchedule/Index");
             if (scheduleMenu == null)
@@ -867,70 +888,8 @@ namespace NavSnap.Data
             dailyTargetMenu.IconClass = "fas fa-bullseye";
             await db.SaveChangesAsync();
 
-            var approvalCenterMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "/Approval/Index");
-            if (approvalCenterMenu == null)
-            {
-                var nextSort = (await db.Menus.MaxAsync(m => (int?)m.SortOrder) ?? 0) + 1;
-                approvalCenterMenu = new Menu
-                {
-                    MenuName = "Approval Center",
-                    MenuUrl = "/Approval/Index",
-                    IconClass = "fas fa-tasks",
-                    SortOrder = nextSort,
-                    ParentId = null,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await db.Menus.AddAsync(approvalCenterMenu);
-                await db.SaveChangesAsync();
-            }
-
-            var auditMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "/Audit/Index");
-            if (auditMenu == null)
-            {
-                var nextSort = (await db.Menus.MaxAsync(m => (int?)m.SortOrder) ?? 0) + 1;
-                auditMenu = new Menu
-                {
-                    MenuName = "Audit Log",
-                    MenuUrl = "/Audit/Index",
-                    IconClass = "fas fa-clipboard-list",
-                    SortOrder = nextSort,
-                    ParentId = null,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await db.Menus.AddAsync(auditMenu);
-                await db.SaveChangesAsync();
-            }
-
-            var controlCenterMenu = await db.Menus.FirstOrDefaultAsync(m => m.MenuUrl == "#" && m.MenuName == "Control Center");
-            if (controlCenterMenu == null)
-            {
-                var nextSort = (await db.Menus.MaxAsync(m => (int?)m.SortOrder) ?? 0) + 1;
-                controlCenterMenu = new Menu
-                {
-                    MenuName = "Control Center",
-                    MenuUrl = "#",
-                    IconClass = "fas fa-shield-alt",
-                    SortOrder = nextSort,
-                    ParentId = null,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await db.Menus.AddAsync(controlCenterMenu);
-                await db.SaveChangesAsync();
-            }
-
-            if (approvalCenterMenu.ParentId != controlCenterMenu.Id)
-            {
-                approvalCenterMenu.ParentId = controlCenterMenu.Id;
-                await db.SaveChangesAsync();
-            }
-            if (auditMenu.ParentId != controlCenterMenu.Id)
-            {
-                auditMenu.ParentId = controlCenterMenu.Id;
-                await db.SaveChangesAsync();
-            }
+            var approvalCenterMenu = await EnsureChildMenu(controlCenterMenu, "Approval Center", "/Approval/Index", "fas fa-tasks", 3);
+            var auditMenu = await EnsureChildMenu(controlCenterMenu, "Audit Trail", "/Audit/Index", "fas fa-clipboard-list", 4);
 
             // Merge duplicate feature menus by URL to prevent duplicate UI entries.
             var duplicatedUrlGroups = (await db.Menus
@@ -1001,37 +960,37 @@ namespace NavSnap.Data
             }
 
             await SetSortOrderAsync("/Home/Index", null, 1);
-            await SetSortOrderAsync("#", "Sales Tracking", 2);
-            await SetSortOrderAsync("/SalesTracking/Index", null, 3);
-            await SetSortOrderAsync("/SalesTracking/History", null, 4);
-            await SetSortOrderAsync("#", "Sales Report", 5);
-            await SetSortOrderAsync("/SalesVisitReport/Index", null, 6);
-            await SetSortOrderAsync("/SalesCompliance/Index", null, 7);
-            await SetSortOrderAsync("#", "Sales Planning", 8);
-            await SetSortOrderAsync("/SalesTarget/Index", null, 9);
-            await SetSortOrderAsync("/SalesSchedule/Index", null, 10);
-            await SetSortOrderAsync("#", "Checkpoint", 11);
-            await SetSortOrderAsync("/Checkpoint/Index", null, 12);
-            await SetSortOrderAsync("/Checkpoint/Map", null, 13);
-            await SetSortOrderAsync("#", "Payroll & Attendance", 14);
-            await SetSortOrderAsync("/Payroll/AttendanceSettings", null, 15);
-            await SetSortOrderAsync("/Payroll/AttendanceReport", null, 16);
-            await SetSortOrderAsync("/Payroll/LeaveOvertime", null, 17);
-            await SetSortOrderAsync("/PayrollAutoSend/Index", null, 18);
-            await SetSortOrderAsync("/WorkArrangement/Index", null, 19);
-            await SetSortOrderAsync("#", "Talent Management", 20);
-            await SetSortOrderAsync("/Recruitment/Index", null, 21);
-            await SetSortOrderAsync("/Onboarding/Index", null, 22);
-            await SetSortOrderAsync("/CvSummary/Index", null, 23);
-            await SetSortOrderAsync("#", "Administrasi", 24);
-            await SetSortOrderAsync("/User/Index", null, 25);
-            await SetSortOrderAsync("/Role/Index", null, 26);
-            await SetSortOrderAsync("/MenuAdmin/Index", null, 27);
-            await SetSortOrderAsync("/Role/AccessMenu", null, 28);
+            await SetSortOrderAsync("#", "Operational Control", 2);
+            await SetSortOrderAsync("/Approval/Index", null, 3);
+            await SetSortOrderAsync("/Audit/Index", null, 4);
+            await SetSortOrderAsync("#", "Field Operations", 5);
+            await SetSortOrderAsync("/SalesTracking/Index", null, 6);
+            await SetSortOrderAsync("/SalesTracking/History", null, 7);
+            await SetSortOrderAsync("#", "Sales Reports", 8);
+            await SetSortOrderAsync("/SalesVisitReport/Index", null, 9);
+            await SetSortOrderAsync("/SalesCompliance/Index", null, 10);
+            await SetSortOrderAsync("#", "Sales Planning", 11);
+            await SetSortOrderAsync("/SalesTarget/Index", null, 12);
+            await SetSortOrderAsync("/SalesSchedule/Index", null, 13);
+            await SetSortOrderAsync("#", "Checkpoint & Territory", 14);
+            await SetSortOrderAsync("/Checkpoint/Index", null, 15);
+            await SetSortOrderAsync("/Checkpoint/Map", null, 16);
+            await SetSortOrderAsync("#", "HR & Payroll", 17);
+            await SetSortOrderAsync("/Payroll/AttendanceSettings", null, 18);
+            await SetSortOrderAsync("/Payroll/AttendanceReport", null, 19);
+            await SetSortOrderAsync("/Payroll/LeaveOvertime", null, 20);
+            await SetSortOrderAsync("/PayrollAutoSend/Index", null, 21);
+            await SetSortOrderAsync("/WorkArrangement/Index", null, 22);
+            await SetSortOrderAsync("#", "Talent Management", 23);
+            await SetSortOrderAsync("/Recruitment/Index", null, 24);
+            await SetSortOrderAsync("/Onboarding/Index", null, 25);
+            await SetSortOrderAsync("/CvSummary/Index", null, 26);
+            await SetSortOrderAsync("#", "Application Settings", 27);
+            await SetSortOrderAsync("/User/Index", null, 28);
             await SetSortOrderAsync("/MUser/Index", null, 29);
-            await SetSortOrderAsync("#", "Control Center", 30);
-            await SetSortOrderAsync("/Approval/Index", null, 31);
-            await SetSortOrderAsync("/Audit/Index", null, 32);
+            await SetSortOrderAsync("/Role/Index", null, 30);
+            await SetSortOrderAsync("/Role/AccessMenu", null, 31);
+            await SetSortOrderAsync("/MenuAdmin/Index", null, 32);
 
             // --- Admin user ---
             if (!await db.Users.AnyAsync())
@@ -1182,14 +1141,28 @@ namespace NavSnap.Data
             }
 
             await EnsureRoleMenuAccess("Administrator",
-                trackingMenu, salesReportMenu, visitReportMenu, complianceMenu, salesPlanningMenu,
-                payrollMenu, payrollAutoMenu, workArrangementMenu, talentMenu, recruitmentMenu,
-                onboardingMenu, cvSummaryMenu);
+                controlCenterMenu, approvalCenterMenu, auditMenu,
+                trackingMenu, liveTrackingMenu, visitHistoryMenu,
+                salesReportMenu, visitReportMenu, complianceMenu,
+                salesPlanningMenu, dailyTargetMenu, scheduleMenu,
+                checkpointMenu, checkpointListMenu, checkpointMapMenu,
+                payrollMenu, attendanceSettingsMenu, attendanceReportMenu, leaveOvertimeMenu,
+                payrollAutoMenu, workArrangementMenu,
+                talentMenu, recruitmentMenu, onboardingMenu, cvSummaryMenu,
+                appSettingsMenu, webUserMenu, mobileUserMenu, roleMenu, accessMenu, menuBuilderMenu);
             await EnsureRoleMenuAccess("Pengawas",
-                trackingMenu, salesReportMenu, visitReportMenu, complianceMenu, salesPlanningMenu,
-                payrollMenu, payrollAutoMenu, workArrangementMenu, talentMenu, recruitmentMenu,
-                onboardingMenu, cvSummaryMenu);
-            await EnsureRoleMenuAccess("Sales", trackingMenu, salesReportMenu, visitReportMenu, payrollMenu, workArrangementMenu);
+                controlCenterMenu, approvalCenterMenu, auditMenu,
+                trackingMenu, liveTrackingMenu, visitHistoryMenu,
+                salesReportMenu, visitReportMenu, complianceMenu,
+                salesPlanningMenu, dailyTargetMenu, scheduleMenu,
+                checkpointMenu, checkpointListMenu, checkpointMapMenu,
+                payrollMenu, attendanceReportMenu, payrollAutoMenu, workArrangementMenu,
+                talentMenu, recruitmentMenu, onboardingMenu, cvSummaryMenu);
+            await EnsureRoleMenuAccess("Sales",
+                trackingMenu, liveTrackingMenu, visitHistoryMenu,
+                salesReportMenu, visitReportMenu,
+                checkpointMenu, checkpointListMenu,
+                payrollMenu, workArrangementMenu);
 
             // --- Dummy transaksi & pergerakan (10 data) ---
             var adminUser = await db.Users.FirstOrDefaultAsync(u => u.Username == "admin");

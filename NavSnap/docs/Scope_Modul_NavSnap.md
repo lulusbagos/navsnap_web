@@ -132,20 +132,27 @@ Flow proses:
 
 ## Menu Sidebar
 
-Struktur menu yang ditambahkan:
+Struktur menu profesional:
 
-- Sales Tracking
+- Dashboard
+- Operational Control
+  - Approval Center
+  - Audit Trail
+- Field Operations
   - Live Tracking
   - Riwayat Kunjungan
-- Sales Report
+- Sales Reports
   - Laporan Kunjungan
   - Compliance Target
 - Sales Planning
   - Target Harian
   - Jadwal Kunjungan
-- Payroll & Attendance
-  - Setting Lokasi Absen
-  - Laporan Absen
+- Checkpoint & Territory
+  - Daftar Checkpoint
+  - Peta Checkpoint
+- HR & Payroll
+  - Lokasi Absensi
+  - Laporan Absensi
   - Izin & Lembur
   - Kirim Payroll Otomatis
   - Pengajuan WFH/WFA
@@ -153,6 +160,12 @@ Struktur menu yang ditambahkan:
   - Rekrutmen
   - Onboarding
   - Ringkasan CV
+- Application Settings
+  - User Web
+  - User Mobile
+  - Role & Permission
+  - Akses Role Menu
+  - Menu Builder
 
 ## Seeder dan Schema
 
