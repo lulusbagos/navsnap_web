@@ -415,12 +415,6 @@
                 <div class="meta-chip"><i class="fas fa-map-pin"></i>Checkpoint</div>
                 <div class="meta-chip" id="lastRefreshChip"><i class="fas fa-sync-alt"></i><span id="lastRefreshLabel">—</span></div>
             </div>
-            <!-- Theme switcher -->
-            <div class="theme-switcher" title="Ganti tema">
-                <button class="theme-btn active" style="background:linear-gradient(135deg,#060d1a,#38bdf8);" data-theme="default" onclick="setTheme(this,'default')" title="Biru Gelap"></button>
-                <button class="theme-btn" style="background:linear-gradient(135deg,#0d0820,#818cf8);" data-theme="purple" onclick="setTheme(this,'purple')" title="Ungu"></button>
-                <button class="theme-btn" style="background:linear-gradient(135deg,#031309,#34d399);" data-theme="green" onclick="setTheme(this,'green')" title="Hijau"></button>
-            </div>
         </div>
     </div>
 
@@ -499,27 +493,11 @@
 
 @section Scripts {
 <script>
-    /* ── Theme switcher ─────────────────────────────────────── */
-    function setTheme(btn, theme) {
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.body.classList.remove('theme-purple','theme-green');
-        if (theme !== 'default') document.body.classList.add('theme-' + theme);
-        // update tile layer
-        updateTileTheme(theme);
-    }
     var tileLayer;
-    function updateTileTheme(theme) {
+    function loadMapTiles() {
         if (tileLayer) map.removeLayer(tileLayer);
-        var url, attr;
-        if (theme === 'green') {
-            url  = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
-        } else if (theme === 'purple') {
-            url  = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
-        } else {
-            url  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-        }
-        attr = '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>';
+        var url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        var attr = '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>';
         tileLayer = L.tileLayer(url, { attribution: attr, subdomains: 'abcd', maxZoom: 19 });
         tileLayer.addTo(map);
     }
@@ -536,7 +514,7 @@
     var map = L.map('liveMap', { zoomControl: true, attributionControl: true })
                .setView([-2.5, 117.5], 5);
     map.zoomControl.setPosition('bottomright');
-    updateTileTheme('default');
+    loadMapTiles();
 
     var salesMarkers = {}, cpMarkers = {}, cpCircles = {},
         routeLines  = {}, targetPins = {}, traceInfoMap = {};

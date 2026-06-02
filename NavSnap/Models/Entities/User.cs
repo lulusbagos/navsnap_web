@@ -33,6 +33,20 @@ namespace NavSnap.Models.Entities
         [MaxLength(20)]
         public string? Phone { get; set; }
 
+        [Column("profile_photo_path")]
+        [MaxLength(255)]
+        public string? ProfilePhotoPath { get; set; }
+
+        [Column("theme_preference")]
+        [MaxLength(30)]
+        public string ThemePreference { get; set; } = "ocean";
+
+        [Column("session_version")]
+        public int SessionVersion { get; set; } = 1;
+
+        [Column("last_login_at")]
+        public DateTime? LastLoginAt { get; set; }
+
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 

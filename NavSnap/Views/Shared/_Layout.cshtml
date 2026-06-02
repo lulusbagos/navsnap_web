@@ -3,6 +3,8 @@
 @inject NavSnap.Data.AppDbContext Db
 @{
     var userFullName = User.FindFirstValue("FullName") ?? User.Identity?.Name ?? "User";
+    var profilePhoto = User.FindFirstValue("ProfilePhoto");
+    var themePreference = User.FindFirstValue("ThemePreference") ?? "ocean";
     var isApprover = User.IsInRole("Administrator") || User.IsInRole("Pengawas");
     var pendingStore = isApprover ? await Db.StoreSubmissions.CountAsync(x => x.Status == "pending") : 0;
     var pendingLeave = isApprover ? await Db.LeaveRequests.CountAsync(x => x.Status == "pending_supervisor" || x.Status == "pending_hr") : 0;
@@ -23,7 +25,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body id="page-top">
+<body id="page-top" data-theme="@themePreference">
     <div id="wrapper">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Home/Index">
@@ -85,13 +87,23 @@
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">@userFullName</span>
-                                <div class="d-inline-block rounded-circle user-avatar-circle">
-                                    @(userFullName.Length > 0 ? userFullName[0].ToString().ToUpper() : "U")
-                                </div>
+                                @if (!string.IsNullOrWhiteSpace(profilePhoto))
+                                {
+                                    <img src="@profilePhoto" alt="@userFullName" class="topbar-profile-photo" />
+                                }
+                                else
+                                {
+                                    <div class="d-inline-block rounded-circle user-avatar-circle">
+                                        @(userFullName.Length > 0 ? userFullName[0].ToString().ToUpper() : "U")
+                                    </div>
+                                }
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>Profil
+                                <a class="dropdown-item" href="/Profile/Index">
+                                    <i class="fas fa-user-cog fa-sm fa-fw mr-2 text-gray-400"></i>Profil & Keamanan
+                                </a>
+                                <a class="dropdown-item" href="/Audit/Index">
+                                    <i class="fas fa-shield-alt fa-sm fa-fw mr-2 text-gray-400"></i>Audit Aktivitas
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <form asp-controller="Account" asp-action="Logout" method="post">

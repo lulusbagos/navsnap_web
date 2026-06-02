@@ -58,7 +58,7 @@
 
                     <div class="pf">
                         <label asp-for="Password">Password @(isEdit ? "(kosongkan jika tidak diubah)" : "")</label>
-                        <input asp-for="Password" type="text" placeholder="Masukkan password" />
+                        <input asp-for="Password" type="password" placeholder="Masukkan password" autocomplete="new-password" />
                         <span asp-validation-for="Password" class="val-err"></span>
                     </div>
 

@@ -1,0 +1,188 @@
+@model NavSnap.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Profil & Keamanan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var initial = !string.IsNullOrWhiteSpace(Model.FullName) ? Model.FullName.Trim()[0].ToString().ToUpper() : "U";
+    var lastLogin = Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm") : "Belum tercatat";
+    var themes = new[]
+    {
+        new { Id = "ocean", Name = "Ocean", Desc = "Profesional biru modern" },
+        new { Id = "midnight", Name = "Midnight", Desc = "Premium gelap fokus" },
+        new { Id = "emerald", Name = "Emerald", Desc = "Fresh dan operasional" },
+        new { Id = "graphite", Name = "Graphite", Desc = "Netral eksekutif" }
+    };
+}
+
+<style>
+.profile-shell{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:1.25rem}
+@@media(max-width:992px){.profile-shell{grid-template-columns:1fr}}
+.profile-hero{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(135deg,var(--navsnap-primary-dark),var(--navsnap-primary));color:#fff;padding:1.45rem;box-shadow:var(--navsnap-shadow)}
+.profile-hero:after{content:"";position:absolute;inset:auto -5rem -8rem auto;width:18rem;height:18rem;border-radius:50%;background:rgba(255,255,255,.12)}
+.profile-id{position:relative;display:flex;gap:1rem;align-items:center;z-index:1}
+.profile-avatar-xl{width:86px;height:86px;border-radius:18px;object-fit:cover;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:800;border:1px solid rgba(255,255,255,.24)}
+.profile-title h2{margin:0;font-size:1.35rem;font-weight:800}.profile-title p{margin:.2rem 0 0;color:rgba(255,255,255,.72)}
+.profile-chip-row{position:relative;z-index:1;display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.profile-chip{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.13);border-radius:999px;padding:.35rem .7rem;font-size:.76rem;font-weight:700}
+.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:1rem;position:relative;z-index:1}
+@@media(max-width:640px){.profile-grid{grid-template-columns:1fr}.profile-id{align-items:flex-start;flex-direction:column}}
+.profile-metric{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:.8rem}
+.profile-metric span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.65);font-weight:800}.profile-metric strong{display:block;margin-top:.25rem;font-size:.9rem}
+.premium-panel{background:var(--navsnap-surface);border:1px solid var(--navsnap-line);border-radius:12px;box-shadow:var(--navsnap-shadow);padding:1.2rem;margin-bottom:1.25rem}
+.panel-head{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem}.panel-head i{width:36px;height:36px;border-radius:10px;background:var(--navsnap-primary-soft);color:var(--navsnap-primary);display:flex;align-items:center;justify-content:center}.panel-head h5{font-size:1rem;font-weight:800;margin:0}.panel-head p{font-size:.76rem;color:var(--navsnap-muted);margin:0}
+.premium-form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}.premium-form-grid .full{grid-column:1/-1}@@media(max-width:640px){.premium-form-grid{grid-template-columns:1fr}}
+.premium-label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--navsnap-muted)}
+.premium-input{width:100%;border:1px solid var(--navsnap-line);border-radius:9px;padding:.72rem .82rem;background:var(--navsnap-surface-soft);color:var(--navsnap-text);outline:none}.premium-input:focus{border-color:var(--navsnap-primary);box-shadow:0 0 0 .2rem rgba(43,187,216,.16)}
+.premium-btn{border:0;border-radius:9px;padding:.72rem 1rem;font-weight:800;display:inline-flex;gap:.5rem;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navsnap-primary),var(--navsnap-cyan));color:#fff;box-shadow:0 10px 20px rgba(15,107,143,.18)}.premium-btn:hover{color:#fff;filter:brightness(.98)}
+.danger-btn{background:linear-gradient(135deg,#b4233c,#e05263)}.soft-btn{background:var(--navsnap-surface-soft);color:var(--navsnap-text);border:1px solid var(--navsnap-line);box-shadow:none}
+.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}@@media(max-width:640px){.theme-grid{grid-template-columns:1fr}}
+.theme-card{width:100%;text-align:left;border:1px solid var(--navsnap-line);background:var(--navsnap-surface-soft);border-radius:10px;padding:.8rem;display:flex;gap:.75rem;align-items:center;color:var(--navsnap-text)}.theme-card.active{border-color:var(--navsnap-primary);box-shadow:0 0 0 .2rem rgba(43,187,216,.14)}
+.theme-swatch{width:42px;height:42px;border-radius:10px;flex:0 0 42px}.theme-swatch.ocean{background:linear-gradient(135deg,#06354a,#2bbbd8)}.theme-swatch.midnight{background:linear-gradient(135deg,#080b14,#7c8cff)}.theme-swatch.emerald{background:linear-gradient(135deg,#063c31,#34d399)}.theme-swatch.graphite{background:linear-gradient(135deg,#1f2937,#94a3b8)}
+.theme-card strong{display:block;font-size:.86rem}.theme-card span{display:block;color:var(--navsnap-muted);font-size:.72rem}
+.security-list{display:flex;flex-direction:column;gap:.65rem}.security-item{display:flex;gap:.75rem;padding:.72rem;border:1px solid var(--navsnap-line);border-radius:10px;background:var(--navsnap-surface-soft)}.security-dot{width:34px;height:34px;border-radius:10px;background:var(--navsnap-primary-soft);color:var(--navsnap-primary);display:flex;align-items:center;justify-content:center;flex:0 0 34px}.security-item strong{font-size:.82rem}.security-item p{font-size:.72rem;color:var(--navsnap-muted);margin:.12rem 0 0}.security-time{font-size:.68rem;color:var(--navsnap-muted);white-space:nowrap;margin-left:auto}
+</style>
+
+<div class="profile-hero mb-4">
+    <div class="profile-id">
+        @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoPath))
+        {
+            <img class="profile-avatar-xl" src="@Model.ProfilePhotoPath" alt="@Model.FullName" />
+        }
+        else
+        {
+            <div class="profile-avatar-xl">@initial</div>
+        }
+        <div class="profile-title">
+            <h2>@Model.FullName</h2>
+            <p>@Model.Username · Profil, keamanan akun, dan personalisasi aplikasi</p>
+            <div class="profile-chip-row">
+                @foreach (var role in Model.Roles)
+                {
+                    <span class="profile-chip">@role</span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="profile-grid">
+        <div class="profile-metric"><span>Email</span><strong>@(Model.Email ?? "-")</strong></div>
+        <div class="profile-metric"><span>Telepon</span><strong>@(Model.Phone ?? "-")</strong></div>
+        <div class="profile-metric"><span>Login Terakhir</span><strong>@lastLogin</strong></div>
+    </div>
+</div>
+
+<div class="profile-shell">
+    <div>
+        <div class="premium-panel">
+            <div class="panel-head">
+                <i class="fas fa-id-card"></i>
+                <div><h5>Informasi Profil</h5><p>Data ini tampil pada topbar, audit, dan identitas user aplikasi.</p></div>
+            </div>
+            <form asp-action="Update" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="premium-form-grid">
+                    <div class="full">
+                        <label class="premium-label">Nama Lengkap</label>
+                        <input class="premium-input" name="FullName" value="@Model.FullName" maxlength="100" required />
+                    </div>
+                    <div>
+                        <label class="premium-label">Email</label>
+                        <input class="premium-input" name="Email" value="@Model.Email" type="email" maxlength="100" />
+                    </div>
+                    <div>
+                        <label class="premium-label">Telepon</label>
+                        <input class="premium-input" name="Phone" value="@Model.Phone" maxlength="20" />
+                    </div>
+                    <div class="full">
+                        <label class="premium-label">Foto Profil</label>
+                        <input class="premium-input" name="ProfilePhoto" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                    </div>
+                </div>
+                <button class="premium-btn mt-3" type="submit"><i class="fas fa-save"></i>Simpan Profil</button>
+            </form>
+        </div>
+
+        <div class="premium-panel">
+            <div class="panel-head">
+                <i class="fas fa-lock"></i>
+                <div><h5>Ganti Password</h5><p>Password baru akan mencabut sesi login lama secara otomatis.</p></div>
+            </div>
+            <form asp-action="ChangePassword" method="post">
+                @Html.AntiForgeryToken()
+                <div class="premium-form-grid">
+                    <div class="full">
+                        <label class="premium-label">Password Saat Ini</label>
+                        <input class="premium-input" name="CurrentPassword" type="password" autocomplete="current-password" required />
+                    </div>
+                    <div>
+                        <label class="premium-label">Password Baru</label>
+                        <input class="premium-input" name="NewPassword" type="password" autocomplete="new-password" minlength="6" required />
+                    </div>
+                    <div>
+                        <label class="premium-label">Konfirmasi Password</label>
+                        <input class="premium-input" name="ConfirmPassword" type="password" autocomplete="new-password" minlength="6" required />
+                    </div>
+                </div>
+                <button class="premium-btn mt-3" type="submit"><i class="fas fa-key"></i>Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="premium-panel">
+            <div class="panel-head">
+                <i class="fas fa-palette"></i>
+                <div><h5>Tema Aplikasi</h5><p>Pilih tampilan sesuai preferensi kerja.</p></div>
+            </div>
+            <div class="theme-grid">
+                @foreach (var theme in themes)
+                {
+                    <form asp-action="SetTheme" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="theme" value="@theme.Id" />
+                        <button class="theme-card @(Model.ThemePreference == theme.Id ? "active" : "")" type="submit">
+                            <span class="theme-swatch @theme.Id"></span>
+                            <span><strong>@theme.Name</strong><span>@theme.Desc</span></span>
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="premium-panel">
+            <div class="panel-head">
+                <i class="fas fa-user-shield"></i>
+                <div><h5>Keamanan Session</h5><p>Gunakan revoke jika akun dipakai di perangkat lain.</p></div>
+            </div>
+            <form asp-action="RevokeSessions" method="post">
+                @Html.AntiForgeryToken()
+                <button class="premium-btn danger-btn w-100" type="submit"><i class="fas fa-ban"></i>Revoke Semua Session Lama</button>
+            </form>
+        </div>
+
+        <div class="premium-panel">
+            <div class="panel-head">
+                <i class="fas fa-history"></i>
+                <div><h5>Log Keamanan</h5><p>Aktivitas login dan perubahan akun terbaru.</p></div>
+            </div>
+            <div class="security-list">
+                @if (!Model.SecurityLogs.Any())
+                {
+                    <div class="security-item">
+                        <div class="security-dot"><i class="fas fa-info"></i></div>
+                        <div><strong>Belum ada log</strong><p>Aktivitas keamanan akan tampil setelah login atau perubahan akun.</p></div>
+                    </div>
+                }
+                @foreach (var log in Model.SecurityLogs)
+                {
+                    <div class="security-item">
+                        <div class="security-dot"><i class="fas fa-shield-alt"></i></div>
+                        <div>
+                            <strong>@log.Action</strong>
+                            <p>@log.Description</p>
+                        </div>
+                        <div class="security-time">@log.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

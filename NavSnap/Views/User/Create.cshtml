@@ -53,7 +53,7 @@
                             <div class="pf">
                                 <label>Password @(isEdit ? "<span style='font-weight:400;text-transform:none;letter-spacing:0;color:rgba(255,255,255,.3);font-size:.68rem;'>(kosongkan jika tidak diubah)</span>" : "")</label>
                                 @{ var pwPlaceholder = isEdit ? "Kosongkan jika tidak diubah" : "Masukkan password"; }
-                                <input asp-for="Password" type="text" placeholder="@pwPlaceholder" />
+                                <input asp-for="Password" type="password" placeholder="@pwPlaceholder" autocomplete="new-password" />
                                 <span asp-validation-for="Password" class="val-err"></span>
                             </div>
                         </div>

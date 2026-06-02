@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using NavSnap.Data;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +35,33 @@ builder.Services.AddAuthentication("NavSnapCookie")
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.Name = "NavSnap.Auth";
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                var userIdText = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var sessionVersionText = context.Principal?.FindFirstValue("SessionVersion");
+                if (!int.TryParse(userIdText, out var userId) || !int.TryParse(sessionVersionText, out var sessionVersion))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync("NavSnapCookie");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var user = await db.Users
+                    .AsNoTracking()
+                    .Where(u => u.Id == userId)
+                    .Select(u => new { u.IsActive, u.SessionVersion })
+                    .FirstOrDefaultAsync();
+
+                if (user == null || !user.IsActive || user.SessionVersion != sessionVersion)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync("NavSnapCookie");
+                }
+            }
+        };
     });
 
 builder.Services.AddSession(options =>
@@ -45,9 +75,18 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// --- Startup DB seed / schema sync ---
-using (var scope = app.Services.CreateScope())
+// --- Optional startup DB seed / schema sync (disabled by default for faster startup) ---
+var runSeeder = builder.Configuration.GetValue<bool?>("RunSeeder") ?? false;
+var runSeederEnv = Environment.GetEnvironmentVariable("NAVSNAP_RUN_SEEDER");
+if (!string.IsNullOrWhiteSpace(runSeederEnv) &&
+    (runSeederEnv == "1" || runSeederEnv.Equals("true", StringComparison.OrdinalIgnoreCase)))
 {
+    runSeeder = true;
+}
+
+if (runSeeder)
+{
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await DbSeeder.SeedAsync(db);
 }

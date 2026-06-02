@@ -167,9 +167,24 @@ Struktur menu profesional:
   - Akses Role Menu
   - Menu Builder
 
+## Profile, Tema, dan Keamanan Akun
+
+Flow profile user:
+1. User membuka menu `Profil & Keamanan` dari dropdown akun di topbar.
+2. User dapat memperbarui nama, email, nomor telepon, dan foto profil.
+3. Foto profil tampil sebagai avatar topbar dan identitas user.
+4. User dapat memilih tema aplikasi: Ocean, Midnight, Emerald, atau Graphite.
+5. Tema disimpan di akun user dan diterapkan kembali setelah login.
+
+Flow keamanan:
+1. Login sukses, login gagal, logout, perubahan profil, perubahan tema, ganti password, dan revoke session dicatat ke `Audit Log`.
+2. Ganti password menaikkan `session_version`, sehingga sesi login lama otomatis tidak valid.
+3. Tombol `Revoke Semua Session Lama` tersedia ketika user mencurigai akunnya dipakai perangkat lain.
+4. Sesi aktif saat ini tetap berjalan setelah revoke, sementara cookie lama dari perangkat lain akan ditolak saat request berikutnya.
+
 ## Seeder dan Schema
 
-Schema version dinaikkan ke `v13`.
+Schema version dinaikkan ke `v14`.
 
 Seeder membuat tabel baru dengan `CREATE TABLE IF NOT EXISTS`, sehingga aman dijalankan berulang. Menu, role access, dan dummy data juga dicek terlebih dahulu agar tidak terjadi duplikasi.
 

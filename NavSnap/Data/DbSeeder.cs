@@ -6,7 +6,7 @@ namespace NavSnap.Data
     public static class DbSeeder
     {
         // ── Bump this string whenever DDL schema changes ──────────────────────
-        private const string SchemaVersion = "v13";
+        private const string SchemaVersion = "v14";
 
         public static async Task SeedAsync(AppDbContext db)
         {
@@ -287,6 +287,11 @@ namespace NavSnap.Data
             await ExecSafeAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ux_attendance_geofence_setting_seq ON tbl_m_attendance_geofence_points (attendance_setting_id, seq_no);");
             await ExecSafeAsync(@"CREATE UNIQUE INDEX IF NOT EXISTS ux_sales_visit_schedules_slot ON tbl_t_sales_visit_schedules (user_id, checkpoint_id, schedule_date, start_time, end_time);");
             await ExecSafeAsync(@"CREATE INDEX IF NOT EXISTS ix_audit_logs_module_created ON tbl_t_audit_logs (module, created_at);");
+
+            await ExecSafeAsync(@"ALTER TABLE tbl_m_users ADD COLUMN IF NOT EXISTS profile_photo_path varchar(255) NULL;");
+            await ExecSafeAsync(@"ALTER TABLE tbl_m_users ADD COLUMN IF NOT EXISTS theme_preference varchar(30) NOT NULL DEFAULT 'ocean';");
+            await ExecSafeAsync(@"ALTER TABLE tbl_m_users ADD COLUMN IF NOT EXISTS session_version integer NOT NULL DEFAULT 1;");
+            await ExecSafeAsync(@"ALTER TABLE tbl_m_users ADD COLUMN IF NOT EXISTS last_login_at timestamp NULL;");
 
             // Foreign keys. Use NOT VALID to avoid long validation locks at startup.
             await ExecSafeAsync(@"
